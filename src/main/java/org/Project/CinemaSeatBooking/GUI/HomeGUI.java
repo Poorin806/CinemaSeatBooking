@@ -1,23 +1,32 @@
 package org.Project.CinemaSeatBooking.GUI;
 
-import org.Project.CinemaSeatBooking.Utils.MongoDBConnection;
+import org.Project.CinemaSeatBooking.Model.MovieModel;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.sql.SQLException;
 
 public class HomeGUI {
 
-    private static final JPanel homeContent = HomeContentGUI.get();
+    private static final JPanel homeContent;
+
+    static {
+        try {
+            homeContent = HomeContentGUI.get();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private static final CardLayout cardLayout = new CardLayout();
 
     private static final JPanel container = new JPanel(new BorderLayout());
     private static final JPanel cards = new JPanel(cardLayout);
     private static final JFrame frame = new JFrame();
 
-    public static void show() {
-
+    public static void show() throws SQLException {
 
         frame.getContentPane().setBackground(new Color(20, 20, 20));
         frame.setSize(1124, 868);
@@ -65,8 +74,7 @@ public class HomeGUI {
             @Override
             public void windowClosing(WindowEvent e) {
                 super.windowClosing(e);
-                // MongoDB close-connection
-//                MongoDBConnection.Disconnect();
+                // TODO: Close database connection
                 frame.dispose();
             }
         });
@@ -80,12 +88,12 @@ public class HomeGUI {
         cardLayout.show(cards, "homeContent");
     }
 
-    public static void changeToMovieDetail(String movieTitle) {
-        MovieDetailGUI.setMovieData(movieTitle);
+    public static void changeToMovieDetail(MovieModel movieModel) throws SQLException {
+        MovieDetailGUI.setMovieData(movieModel);
         cardLayout.show(cards, "movieDetail");
     }
 
-    public static void changeToSeatBooking(String data) {
+    public static void changeToSeatBooking(MovieModel data) {
         SeatBookingGUI.setMovieData(data);
         SeatBookingGUI.clearSeatSelections();
         cardLayout.show(cards, "seatBooking");

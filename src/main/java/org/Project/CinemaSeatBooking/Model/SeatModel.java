@@ -3,40 +3,49 @@ package org.Project.CinemaSeatBooking.Model;
 import lombok.Data;
 import org.Project.CinemaSeatBooking.Service.RoomService;
 import org.Project.CinemaSeatBooking.Service.SeatTypeService;
-import org.bson.Document;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
 
 @Data
 public class SeatModel {
 
-    private String SeatId;  // Unique identifier for Mongo DB
+    private Integer seatId;  // Unique identifier for Mongo DB
 
     private RoomModel roomModel;
 
-    private String Row; // Seat row (Ex: A, B, C, etc)
+    private String row; // Seat row (Ex: A, B, C, etc)
 
-    private Integer Number; // Number of rows (Ex: A1, B1, C2, etc)
+    private Integer number; // Number of rows (Ex: A1, B1, C2, etc)
 
     private SeatTypeModel seatTypeModel;
 
-    public SeatModel DTO(Document doc) {
-        SeatModel seatModel = new SeatModel();
+    // Lazy loading
+    private static List<RoomModel> roomModelList = null;
+    private static List<SeatTypeModel> seatTypeModelList = null;
 
-        seatModel.setSeatId(doc.getObjectId("_id").toString());
+    public SeatModel() throws SQLException {}
 
-        // Sub DTO Room Model
-        RoomService roomService = new RoomService();
-        RoomModel roomModelTmp = roomService.FindOneById(doc.getString("RoomId"));
-        seatModel.setRoomModel(roomModelTmp);
+    public SeatModel(ResultSet resultSet) throws SQLException {
 
-        seatModel.setRow(doc.getString("Row"));
-        seatModel.setNumber(doc.getInteger("Number"));
+        this.seatId = resultSet.getInt("seat_id");
 
-        // Sub DTO SeatType Model
-        SeatTypeService seatTypeService = new SeatTypeService();
-        SeatTypeModel seatTypeModelTmp = seatTypeService.FindOneById(doc.getString("SeatTypeId"));
-        seatModel.setSeatTypeModel(seatTypeModelTmp);
+        String roomId = resultSet.getString("room_id");
+        if (roomModelList == null) roomModelList = new RoomService().getAll();
+        for (RoomModel tmp : roomModelList) {
+            if (tmp.getRoomId().equals(roomId)) this.roomModel = tmp;
+        }
 
-        return seatModel;
+        this.row = resultSet.getString("seat_row");
+        this.number = resultSet.getInt("seat_number");
+
+        int seatTypeId = resultSet.getInt("seat_type_id");
+        if (seatTypeModelList == null) seatTypeModelList = new SeatTypeService().getAll();
+        for (SeatTypeModel tmp : seatTypeModelList) {
+            if (tmp.getSeatTypeId() == seatTypeId) this.seatTypeModel = tmp;
+        }
+
     }
 
 }

@@ -1,26 +1,22 @@
 package org.Project.CinemaSeatBooking.Model;
 
 import lombok.Data;
-import org.bson.Document;
-import org.bson.types.ObjectId;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 @Data
 public class GenreModel {
 
-    private String GenreId;
+    private Integer genreId;
+    private String name;
 
-    private String Name;
+    public GenreModel() {}
 
-    public GenreModel DTO(Document doc) {
-
-        GenreModel genreModel = new GenreModel();
-        genreModel.setGenreId(doc.getObjectId("_id").toString());
-        genreModel.setName(doc.getString("Name"));
-
-        return genreModel;
+    // DTO - Constructor
+    public GenreModel(ResultSet resultSet) throws SQLException {
+        this.genreId = resultSet.getInt("genre_id");
+        this.name = resultSet.getString("genre_name");
     }
 
 }

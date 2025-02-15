@@ -3,23 +3,26 @@ package org.Project.CinemaSeatBooking.Model;
 import lombok.Data;
 import org.bson.Document;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 @Data
 public class SeatTypeModel {
 
-    private String SeatTypeId;
+    private Integer seatTypeId;
 
-    private String Name;
+    private String name;
 
-    private Double Price;
+    private Double price;
 
-    public SeatTypeModel DTO(Document doc) {
+    public SeatTypeModel() {}
 
-        SeatTypeModel seatTypeModel = new SeatTypeModel();
-        seatTypeModel.setSeatTypeId(doc.getObjectId("_id").toString());
-        seatTypeModel.setName(doc.getString("Name"));
-        seatTypeModel.setPrice(doc.getDouble("Price"));
+    public SeatTypeModel(ResultSet resultSet) throws SQLException {
 
-        return seatTypeModel;
+        this.seatTypeId = resultSet.getInt("seat_type_id");
+        this.name = resultSet.getString("seat_type_name");
+        this.price = resultSet.getDouble("seat_price");
+
     }
 
 }

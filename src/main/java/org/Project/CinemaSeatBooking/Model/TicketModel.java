@@ -3,51 +3,49 @@ package org.Project.CinemaSeatBooking.Model;
 import lombok.Data;
 import org.Project.CinemaSeatBooking.Service.MovieScheduleService;
 import org.Project.CinemaSeatBooking.Service.SeatService;
-import org.bson.Document;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
 
 @Data
 public class TicketModel {
 
-    private String TicketId;
+    private String ticketId;
 
     private MovieScheduleModel movieScheduleModel;
 
-    private Double TotalPrice;  // Calculated price after adding seats + movies price
+    private Double totalPrice;  // Calculated price after adding seats + movies price
 
     private SeatModel seatModel;
 
-    private String Customer;    // Optional
+    private String customer;    // Optional
 
-    private Boolean IsActive;   // Checking if the ticket is active or not (true = active, false = canceled tickets)
+    private Boolean isActive;   // Checking if the ticket is active or not (true = active, false = canceled tickets)
 
-    public TicketModel DTO(Document doc) {
+    private static List<MovieScheduleModel> movieScheduleModelList = null;
+    private static List<SeatModel> seatModelList = null;
 
-        TicketModel ticketModel = new TicketModel();
+    public TicketModel() {}
 
-        ticketModel.setTicketId(doc.getObjectId("_id").toString());
+    public TicketModel(ResultSet resultSet) throws SQLException {
 
-        // Sub DTO Movie Schedule Model
-        MovieScheduleService movieScheduleService = new MovieScheduleService();
-        MovieScheduleModel movieScheduleModelTmp = movieScheduleService.FindOneById(
-                doc.getString("ScheduleId")
-        );
-        ticketModel.setMovieScheduleModel(movieScheduleModelTmp);
+        this.ticketId = resultSet.getString("ticket_id");
 
-        ticketModel.setTotalPrice(doc.getDouble("TotalPrice"));
-        ticketModel.setCustomer(
-                doc.getString("Customer") != null ? doc.getString("Customer") : null
-        );
+        String movieScheduleId = resultSet.getString("movie_schedule_id");
+        if (movieScheduleModelList == null) movieScheduleModelList = new MovieScheduleService().getAll();
+        for (MovieScheduleModel tmp : movieScheduleModelList)
+            if (tmp.getScheduleId().equals(movieScheduleId)) this.movieScheduleModel = tmp;
 
-        ticketModel.setIsActive(doc.getBoolean("IsActive"));
+        this.totalPrice = resultSet.getDouble("total_price");
 
-        // Sub DTO Seat Model
-        SeatService seatService = new SeatService();
-        SeatModel seatModelTmp = seatService.FindOneById(
-                doc.getString("SeatId")
-        );
-        ticketModel.setSeatModel(seatModelTmp);
+        int seatId = resultSet.getInt("seat_id");
+        if (seatModelList == null) seatModelList = new SeatService().getAll();
+        for (SeatModel tmp : seatModelList)
+            if (tmp.getSeatId() == seatId) this.seatModel = tmp;
 
-        return ticketModel;
+        this.customer = resultSet.getString("customer");
+        this.isActive = resultSet.getBoolean("is_active");
 
     }
 

@@ -1,7 +1,6 @@
 package org.Project.CinemaSeatBooking.Utils;
 
 import javax.swing.*;
-import javax.swing.plaf.basic.BasicButtonUI;
 import java.awt.*;
 
 public class GuiUtils {

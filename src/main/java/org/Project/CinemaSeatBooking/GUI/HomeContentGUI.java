@@ -1,20 +1,23 @@
 package org.Project.CinemaSeatBooking.GUI;
 
+import org.Project.CinemaSeatBooking.Model.MovieModel;
+import org.Project.CinemaSeatBooking.Service.MovieService;
 import org.Project.CinemaSeatBooking.Utils.BackgroundImageJPanel;
-import org.Project.CinemaSeatBooking.Utils.GuiUtils;
+import org.Project.CinemaSeatBooking.Utils.EssentialsUtils;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
+import java.sql.SQLException;
+import java.util.List;
 
 public class HomeContentGUI {
 
     private static final JPanel homeContent = new JPanel(new BorderLayout());
 
-    public static JPanel get() {
+    public static JPanel get() throws SQLException {
 
         // Main content area
         homeContent.setPreferredSize(new Dimension(824, 768)); // Remaining space
@@ -35,49 +38,64 @@ public class HomeContentGUI {
         JPanel movieItems = new JPanel(new FlowLayout(FlowLayout.LEFT, 40, 30));
         movieItems.setBackground(new Color(73, 73, 73));
 
-        // 🔹 ข้อมูลของหนังแต่ละเรื่อง (กำหนดเป็น List)
-        ArrayList<String[]> movies = new ArrayList<>(); // Maximum = 8 (No-responsive)
-        movies.add(new String[]{"Jan 1, 2025", "Movie 1"});
-        movies.add(new String[]{"Feb 10, 2025", "Movie 2"});
-        movies.add(new String[]{"Mar 5, 2025", "Movie 3"});
-        movies.add(new String[]{"Apr 15, 2025", "Movie 4"});
-        movies.add(new String[]{"Apr 15, 2025", "Movie 5"});
-        movies.add(new String[]{"Apr 15, 2025", "Movie 6"});
-        movies.add(new String[]{"Apr 15, 2025", "Movie 7"});
+        // [Get data from database]
+        List<MovieModel> movieModelList = new MovieService().getAll();
 
-        // 🔄 Loop สร้าง movieCard จากข้อมูล
-        for (String[] movie : movies) {
-            JPanel movieCard = new JPanel(new BorderLayout(0, 2));
-            movieCard.setPreferredSize(new Dimension(150, 280));
-            movieCard.setOpaque(false);
+        // Movie card Looping
+        int counting = 1;
+        for (int i = 0; i < movieModelList.size(); i++) {
 
-            BackgroundImageJPanel movieImg = new BackgroundImageJPanel(
-                    "https://ssb.wiki.gallery/images/f/f3/Steve.png",
-                    false
-            );
-            movieImg.setBackground(new Color(0, 0, 0, 0));
-            movieImg.setPreferredSize(new Dimension(150, 220));
+            if (movieModelList.get(i).getIsActive() && counting <= 8) {
 
-            // Evenet listeners
-            movieCard.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    HomeGUI.changeToMovieDetail(movie[1]);
-                }
-            });
+                JPanel movieCard = new JPanel(new BorderLayout(0, 2));
+                movieCard.setPreferredSize(new Dimension(150, 280));
+                movieCard.setOpaque(false);
 
-            JLabel movieDate = new JLabel(movie[0]);
-            JLabel movieName = new JLabel(movie[1]);
-            movieDate.setForeground(Color.WHITE);
-            movieName.setForeground(Color.WHITE);
-            movieDate.setFont(new Font("Arial", Font.PLAIN, 14));
-            movieName.setFont(new Font("Arial", Font.BOLD, 20));
+                BackgroundImageJPanel movieImg = new BackgroundImageJPanel();
+                movieImg.setBackground(new Color(0, 0, 0, 0));
+                movieImg.setPreferredSize(new Dimension(150, 220));
 
-            movieCard.add(movieImg, BorderLayout.NORTH);
-            movieCard.add(movieDate, BorderLayout.CENTER);
-            movieCard.add(movieName, BorderLayout.SOUTH);
+                // Async loading
+                movieImg.setImage(movieModelList.get(i).getImageUrl(), false);
 
-            movieItems.add(movieCard); // 🔹 เพิ่ม movieCard ลงใน movieItems
+                // Evenet listeners
+                int finalI = i;
+                movieCard.addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseClicked(MouseEvent e) {
+                        System.out.println("See detail: " + movieModelList.get(finalI).getTitle());
+                        try {
+                            HomeGUI.changeToMovieDetail(
+                                    movieModelList.get(finalI)
+                            );
+                        } catch (SQLException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    }
+                });
+
+                JLabel movieDate = new JLabel(
+                        EssentialsUtils.formatDate(movieModelList.get(finalI).getReleaseDate().toString())
+                );
+                JLabel movieName = new JLabel(
+                        movieModelList.get(finalI).getTitle()
+                );
+                movieDate.setForeground(Color.WHITE);
+                movieName.setForeground(Color.WHITE);
+                movieDate.setFont(new Font("Arial", Font.PLAIN, 14));
+                movieName.setFont(new Font("Arial", Font.BOLD, 20));
+
+                movieCard.add(movieImg, BorderLayout.NORTH);
+                movieCard.add(movieDate, BorderLayout.CENTER);
+                movieCard.add(movieName, BorderLayout.SOUTH);
+
+                // Add movie card into panel
+                movieItems.add(movieCard);
+
+                counting++;
+
+            }
+
         }
 
         movieList.add(movieItems, BorderLayout.CENTER);

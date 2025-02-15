@@ -1,21 +1,36 @@
 package org.Project.CinemaSeatBooking.GUI;
 
+import org.Project.CinemaSeatBooking.Model.GenreModel;
+import org.Project.CinemaSeatBooking.Model.MovieModel;
+import org.Project.CinemaSeatBooking.Model.MovieScheduleModel;
+import org.Project.CinemaSeatBooking.Service.MovieScheduleService;
 import org.Project.CinemaSeatBooking.Utils.BackgroundImageJPanel;
-import org.Project.CinemaSeatBooking.Utils.GuiUtils;
+import org.Project.CinemaSeatBooking.Utils.EssentialsUtils;
+
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MovieDetailGUI {
 
     private static final JPanel content = new JPanel(new BorderLayout());
 
-    private static JLabel titleLabel = new JLabel();
-    private static JLabel tagLabel = new JLabel("Tag: .........................");
-    private static JLabel releaseDateLabel = new JLabel("Release Date: ......");
-    private static JLabel showTimeLabel = new JLabel("Show time: ................");
-    private static JTextArea descriptionLabel = new JTextArea(
+    private static final JLabel titleLabel = new JLabel();
+    private static final JLabel tagLabel = new JLabel("Tag: .........................");
+    private static final JLabel releaseDateLabel = new JLabel("Release Date: ......");
+    private static final JLabel showTimeLabel = new JLabel("Show time: ................");
+    private static final JTextArea descriptionLabel = new JTextArea(
             "....");
+
+    private static String imgURL = "";
+    private static BackgroundImageJPanel movieImg = new BackgroundImageJPanel();
+
+    private static MovieModel movieData = new MovieModel();
+    private static List<MovieScheduleModel> movieScheduleModelList = new ArrayList<>();
 
     public static JPanel get() {
 
@@ -26,10 +41,6 @@ public class MovieDetailGUI {
         JPanel mainGrid = new JPanel(new GridLayout(1, 2, 20, 0));
         mainGrid.setOpaque(false);
 
-        BackgroundImageJPanel movieImg = new BackgroundImageJPanel(
-                "https://minecraft.wiki/images/thumb/Charged_Creeper_JE1_BE1.png/150px-Charged_Creeper_JE1_BE1.png?87117",
-                false
-        );
         movieImg.setBackground(new Color(0, 0, 0, 0));
         movieImg.setBackground(Color.LIGHT_GRAY);
 
@@ -95,7 +106,7 @@ public class MovieDetailGUI {
         buttonPanel.add(favBtn);
         // Button Events listeners
         bookingBtn.addActionListener(e -> {
-            selectBookingDetail(titleLabel.getText());
+            selectBookingDetail(movieData);
         });
 
         releaseDateLabel.setForeground(Color.WHITE);
@@ -119,6 +130,7 @@ public class MovieDetailGUI {
         managementPanel.add(buttonPanel);
         managementPanel.add(Box.createVerticalStrut(20));
         managementPanel.add(footerPanel);
+        managementPanel.add(Box.createVerticalStrut(10));
         managementPanel.add(footerPanel_2);
 
         detailGrid.add(descriptionPanel, BorderLayout.NORTH);
@@ -132,35 +144,35 @@ public class MovieDetailGUI {
         return content;
     }
 
-    public static void setMovieData(String name) {
-        titleLabel.setText(name);
+    public static void setMovieData(MovieModel movieModel) throws SQLException {
+        titleLabel.setText(movieModel.getTitle());
+        releaseDateLabel.setText("Release Date: " + EssentialsUtils.formatDate(movieModel.getReleaseDate().toString()));
+        descriptionLabel.setText(movieModel.getDescription());
+
+        String tagList = "";
+        for (GenreModel tmp : movieModel.getGenreList()) {
+            tagList += tmp.getName() + " ";
+        }
+        tagLabel.setText("Tags: " + tagList);
+
+        imgURL = movieModel.getImageUrl();
+        movieImg.setImage(imgURL, false);  // เปลี่ยนรูปภาพแบบไดนามิก
+        movieImg.revalidate();
+        movieImg.repaint();
+
+        movieData = movieModel;
+
+        // Set movie schedule list
+        String sql = "SELECT * FROM movie_schedule ms WHERE ms.movie_id = '" + movieModel.getMovieId() + "'";
+        movieScheduleModelList = new MovieScheduleService().getMany(sql);
     }
 
-    private static void selectBookingDetail(String movieData) {
+    private static void selectBookingDetail(MovieModel movieData) {
 
         JFrame rootFrame = HomeGUI.getRootFrame();
         JDialog popUpDialog = new JDialog(rootFrame, "Select Movie Booking Detail", true);
         popUpDialog.setSize(760, 500);
         popUpDialog.setLayout(new BorderLayout());
-
-        JButton closeBtn = new JButton("Cancel");
-        JButton continueBtn = new JButton("Continue (Forced)");
-        closeBtn.addActionListener(e -> popUpDialog.dispose());
-        continueBtn.addActionListener(e -> {
-            popUpDialog.dispose();
-            HomeGUI.changeToSeatBooking(movieData);
-        });
-        for (JButton btn : new JButton[]{closeBtn, continueBtn}) {
-
-            btn.setPreferredSize(new Dimension(200, 40));
-            btn.setMaximumSize(new Dimension(200, 40));
-            btn.setFocusPainted(false);
-            btn.setBorderPainted(false);
-            btn.setBackground(new Color(217, 217, 217));
-            btn.setForeground(new Color(51, 51, 51));
-            btn.setFont(new Font("Arial", Font.BOLD, 14));
-
-        }
 
         // Container Panel
         JPanel popUpContainer = new JPanel();
@@ -175,10 +187,33 @@ public class MovieDetailGUI {
         headerPanel.setOpaque(false);
         headerPanel.setPreferredSize(new Dimension(popUpDialog.getWidth(), 100));
 
-        JPanel movieImg = new JPanel();
+        JLabel movieTitleLabel = new JLabel(movieData.getTitle());
+        movieTitleLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        JLabel movieDescriptionLabel = new JLabel(movieData.getDescription());
+        movieDescriptionLabel.setFont(new Font("Arial", Font.ITALIC, 18));
+        JLabel releaseDateLabel = new JLabel("Release Date: " + EssentialsUtils.formatDate(movieData.getReleaseDate().toString()));
+        releaseDateLabel.setFont(new Font("Arial", Font.ITALIC, 16));
+        for (JLabel tmp : new JLabel[]{ movieTitleLabel, movieDescriptionLabel, releaseDateLabel }) {
+            tmp.setForeground(Color.WHITE);
+        }
+
+        JPanel movieDetailsPanel = new JPanel();
+        movieDetailsPanel.setLayout(new BoxLayout(movieDetailsPanel, BoxLayout.Y_AXIS));
+        movieDetailsPanel.setOpaque(false);
+        movieDetailsPanel.add(Box.createVerticalGlue());
+        movieDetailsPanel.add(movieTitleLabel);
+        movieDetailsPanel.add(Box.createVerticalStrut(5));
+        movieDetailsPanel.add(movieDescriptionLabel);
+        movieDetailsPanel.add(Box.createVerticalStrut(5));
+        movieDetailsPanel.add(releaseDateLabel);
+        movieDetailsPanel.add(Box.createVerticalGlue());
+
+        BackgroundImageJPanel movieImg = new BackgroundImageJPanel();
         movieImg.setPreferredSize(new Dimension(75, 100));
         movieImg.setBackground(new Color(217, 217, 217));
+        movieImg.setImage(movieData.getImageUrl(), false);
         headerPanel.add(movieImg);
+        headerPanel.add(movieDetailsPanel);
 
         // Selection Panel
         JPanel selectionPanel = new JPanel();
@@ -187,9 +222,50 @@ public class MovieDetailGUI {
         selectionPanel.setPreferredSize(new Dimension(popUpDialog.getWidth(), 400));
         selectionPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        JPanel selectionContentPanel = new JPanel();
+        // Schedule list
+        JPanel selectionContentPanel = new JPanel(new BorderLayout());
+        selectionContentPanel.setPreferredSize(new Dimension(popUpDialog.getWidth(), 360));
+
+        DefaultListModel<String> listModel = new DefaultListModel<>();
+        for (MovieScheduleModel tmp : movieScheduleModelList) {
+            String schedule = tmp.getScheduleId() + ", ";
+            schedule += EssentialsUtils.formatDateTime(tmp.getShowTime(), true) + " - ";
+            schedule += EssentialsUtils.formatDateTime(tmp.getEndTime(), true) + " [";
+            schedule += tmp.getRoomModel().getName() + "]";
+            listModel.addElement(schedule);
+        }
+        JList listOfSchedule = new JList(listModel);
+        listOfSchedule.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        listOfSchedule.setLayoutOrientation(JList.VERTICAL_WRAP);
+        listOfSchedule.setVisibleRowCount(-1);
+
+        JScrollPane listScroller = new JScrollPane(listOfSchedule);
+        listScroller.setPreferredSize(new Dimension(popUpDialog.getWidth(), 360));
+        selectionContentPanel.add(listScroller, BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
+        JButton closeBtn = new JButton("Cancel");
+        JButton continueBtn = new JButton("Booking");
+        closeBtn.addActionListener(e -> popUpDialog.dispose());
+        continueBtn.addActionListener(e -> {
+            if (listOfSchedule.isSelectionEmpty()) {
+                JOptionPane.showMessageDialog(rootFrame, "Please select the screening time", "Warnings", JOptionPane.WARNING_MESSAGE);
+            } else {
+                popUpDialog.dispose();
+                HomeGUI.changeToSeatBooking(movieData);
+            }
+        });
+        for (JButton btn : new JButton[]{closeBtn, continueBtn}) {
+
+            btn.setPreferredSize(new Dimension(200, 40));
+            btn.setMaximumSize(new Dimension(200, 40));
+            btn.setFocusPainted(false);
+            btn.setBorderPainted(false);
+            btn.setBackground(new Color(217, 217, 217));
+            btn.setForeground(new Color(51, 51, 51));
+            btn.setFont(new Font("Arial", Font.BOLD, 14));
+
+        }
         buttonPanel.setOpaque(false);
         buttonPanel.setMaximumSize(new Dimension(760, 40));
         buttonPanel.add(continueBtn);

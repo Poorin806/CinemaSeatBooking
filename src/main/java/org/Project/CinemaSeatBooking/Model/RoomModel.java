@@ -3,18 +3,23 @@ package org.Project.CinemaSeatBooking.Model;
 import lombok.Data;
 import org.bson.Document;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 @Data
 public class RoomModel {
 
-    private String RoomId;
+    private String roomId;
 
-    private String Name;
+    private String name;
 
-    public RoomModel DTO(Document doc) {
-        RoomModel roomModel = new RoomModel();
-        roomModel.setRoomId(doc.getObjectId("_id").toString());
-        roomModel.setName(doc.getString("Name"));
-        return roomModel;
+    public RoomModel() {}
+
+    public RoomModel(ResultSet resultSet) throws SQLException {
+
+        this.roomId = resultSet.getString("room_id");
+        this.name = resultSet.getString("room_name");
+
     }
 
 }

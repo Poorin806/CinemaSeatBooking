@@ -1,5 +1,7 @@
 package org.Project.CinemaSeatBooking.GUI;
 
+import org.Project.CinemaSeatBooking.Model.MovieModel;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ItemEvent;
@@ -138,8 +140,8 @@ public class SeatBookingGUI {
         }
     }
 
-    public static void setMovieData(String name) {
-        movieTitle.setText(name);
+    public static void setMovieData(MovieModel movieModel) {
+        movieTitle.setText(movieModel.getTitle());
     }
 
     private static void cartSeatBooking() {

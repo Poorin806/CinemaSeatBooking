@@ -1,20 +1,19 @@
 package org.Project.CinemaSeatBooking;
 
-import org.Project.CinemaSeatBooking.GUI.DashboardGUI;
 import org.Project.CinemaSeatBooking.GUI.HomeGUI;
-import org.Project.CinemaSeatBooking.Utils.MongoDBConnection;
+import org.Project.CinemaSeatBooking.Utils.MySQLConnection;
 
-import javax.swing.*;
+import java.sql.SQLException;
 
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SQLException {
 
-        // MongoDB connection
-//        MongoDBConnection.Connect();
+        MySQLConnection.getConnection();
 
-        // MongoDB close connection when close GUI
         HomeGUI.show();
+
+//        MySQLConnection.closeConnection();
 
     }
 

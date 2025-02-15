@@ -3,66 +3,51 @@ package org.Project.CinemaSeatBooking.Model;
 import lombok.Data;
 import org.Project.CinemaSeatBooking.Service.MovieService;
 import org.Project.CinemaSeatBooking.Service.RoomService;
-import org.bson.Document;
-import org.bson.types.ObjectId;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
 
 @Data
 public class MovieScheduleModel {
 
-    private String ScheduleId;
+    private String scheduleId;
 
     private MovieModel movieModel;
 
     private RoomModel roomModel;
 
-    private LocalDateTime ShowTime; // Format: yyyyy-MM-dd hh:mm:ss
+    private LocalDateTime showTime; // Format: yyyyy-MM-dd hh:mm:ss
 
-    private LocalDateTime EndTime; // Format: yyyyy-MM-dd hh:mm:ss
+    private LocalDateTime endTime; // Format: yyyyy-MM-dd hh:mm:ss
 
-    public MovieScheduleModel DTO(Document doc) {
+    private static List<MovieModel> movieModelList = null;
+    private static List<RoomModel> roomModelList = null;
 
-        MovieScheduleModel movieScheduleModel = new MovieScheduleModel();
+    public MovieScheduleModel() {}
 
-        movieScheduleModel.setScheduleId(
-                doc.getObjectId("_id").toString()
-        );
+    public MovieScheduleModel(ResultSet resultSet) throws SQLException {
 
-        // Sub DTO Movie Model
-        MovieService movieService = new MovieService();
-        MovieModel movieModelTmp = movieService.FindOneById(
-                doc.getString("MovieId")
-        );
-        movieScheduleModel.setMovieModel(movieModelTmp);
+        this.scheduleId = resultSet.getString("movie_schedule_id");
 
-        // Sub DTO Room Model
-        RoomService roomService = new RoomService();
-        RoomModel roomModelTmp = roomService.FindOneById(
-                doc.getString("RoomId")
-        );
-        movieScheduleModel.setRoomModel(roomModelTmp);
-
-        // Convert Date to LocalDateTime for ShowTime
-        if (doc.getDate("ShowTime") != null) {
-            movieScheduleModel.setShowTime(
-                    doc.getDate("ShowTime").toInstant()
-                            .atZone(ZoneId.systemDefault())
-                            .toLocalDateTime()
-            );
+        String movieId = resultSet.getString("movie_id");
+        if (movieModelList == null) movieModelList = new MovieService().getAll();
+        for (MovieModel tmp : movieModelList) {
+            if (tmp.getMovieId().equals(movieId)) this.movieModel = tmp;
         }
 
-        // Optional: Handle EndTime if required
-        if (doc.getDate("EndTime") != null) {
-            movieScheduleModel.setEndTime(
-                    doc.getDate("EndTime").toInstant()
-                            .atZone(ZoneId.systemDefault())
-                            .toLocalDateTime()
-            );
+        String roomId = resultSet.getString("room_id");
+        if (roomModelList == null) roomModelList = new RoomService().getAll();
+        for (RoomModel tmp : roomModelList) {
+            if (tmp.getRoomId().equals(roomId)) this.roomModel = tmp;
         }
 
-        return movieScheduleModel;
+        this.showTime = resultSet.getObject("show_time", LocalDateTime.class);
+        this.endTime = resultSet.getObject("end_time", LocalDateTime.class);
+
 
     }
 

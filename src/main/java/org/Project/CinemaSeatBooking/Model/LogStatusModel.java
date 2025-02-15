@@ -2,26 +2,24 @@ package org.Project.CinemaSeatBooking.Model;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.Document;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 @Slf4j
 @Data
 public class LogStatusModel {
 
-    private String LogStatusId;
+    private String logStatusId;
 
-    private String Name;
+    private String name;
 
-    public LogStatusModel DTO(Document doc) {
+    public LogStatusModel() {}
 
-        LogStatusModel logStatusModel = new LogStatusModel();
+    public LogStatusModel(ResultSet resultSet) throws SQLException {
 
-        logStatusModel.setLogStatusId(
-                doc.getObjectId("_id").toString()
-        );
-        logStatusModel.setName(doc.getString("Name"));
-
-        return logStatusModel;
+        this.logStatusId = resultSet.getString("log_status_id");
+        this.name = resultSet.getString("log_status_name");
 
     }
 

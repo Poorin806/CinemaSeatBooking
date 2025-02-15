@@ -6,76 +6,60 @@ import org.Project.CinemaSeatBooking.Service.SeatService;
 import org.Project.CinemaSeatBooking.Service.TicketService;
 import org.bson.Document;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
 
 @Data
 public class TicketLogModel {
 
-    private String _id; // Unique identifier for Mongo DB
+    private String ticketLogId; // Unique identifier for Mongo DB
 
     private TicketModel ticketModel;
 
-    private LocalDateTime Timestamp; // Format: yyyy-MM-dd HH:mm:ss
+    private LocalDateTime timeStamp; // Format: yyyy-MM-dd HH:mm:ss
 
     private LogStatusModel logStatusModel;
 
-    private SeatModel CurrentSeat;
+    private SeatModel currentSeat;
 
-    private SeatModel NewSeat;
+    private SeatModel newSeat;
 
-    private String Note;
+    private String note;
 
-    public TicketLogModel DTO(Document doc) {
+    private static List<TicketModel> ticketModelList = null;
+    private static List<LogStatusModel> logStatusModelList = null;
+    private static List<SeatModel> seatModelList = null;
 
-        TicketLogModel ticketLogModel = new TicketLogModel();
+    public TicketLogModel() {}
 
-        ticketLogModel.set_id(
-                doc.getObjectId("_id").toString()
-        );
+    public TicketLogModel(ResultSet resultSet) throws SQLException {
 
-        // Sub DTO Ticket Model
-        TicketService ticketService = new TicketService();
-        ticketLogModel.setTicketModel(ticketService.FindOneById(
-                doc.get("TicketId").toString()
-        ));
+        this.ticketLogId = resultSet.getString("ticket_log_id");
 
-        if (doc.getDate("Timestamp") != null) {
-            ticketLogModel.setTimestamp(
-                    doc.getDate("Timestamp").toInstant()
-                            .atZone(ZoneId.systemDefault())
-                            .toLocalDateTime()
-            );
+        String ticketId = resultSet.getString("ticket_id");
+        if (ticketModelList == null) ticketModelList = new TicketService().getAll();
+        for (TicketModel tmp : ticketModelList)
+            if (tmp.getTicketId().equals(ticketId)) this.ticketModel = tmp;
+
+        this.timeStamp = resultSet.getObject("time_stamp", LocalDateTime.class);
+
+        String logStatusId = resultSet.getString("log_status_id");
+        if (logStatusModelList == null) logStatusModelList = new LogStatusService().getAll();
+        for (LogStatusModel tmp : logStatusModelList)
+            if (tmp.getLogStatusId().equals(logStatusId)) this.logStatusModel = tmp;
+
+        int currentSeat = resultSet.getInt("current_seat");
+        int newSeat = resultSet.getInt("newSeat");
+        if (seatModelList == null) seatModelList = new SeatService().getAll();
+        for (SeatModel tmp : seatModelList) {
+            if (tmp.getSeatId() == currentSeat) this.currentSeat = tmp;
+            if (tmp.getSeatId() == newSeat) this.newSeat = tmp;
         }
 
-        // Sub DTO Log Status
-        LogStatusService logStatusService = new LogStatusService();
-        ticketLogModel.setLogStatusModel(
-                logStatusService.FindOneById(
-                        doc.getString("LogStatusId")
-                )
-        );
-
-        // Sub DTO Seat Model
-        SeatService seatService = new SeatService();
-        ticketLogModel.setCurrentSeat(
-                doc.getString("CurrentSeat") == null ? null : seatService.FindOneById(
-                        doc.getString("CurrentSeat")
-                )
-        );
-
-        ticketLogModel.setNewSeat(
-                doc.getString("NewSeat") == null ? null : seatService.FindOneById(
-                        doc.getString("NewSeat")
-                )
-        );
-
-        ticketLogModel.setNote(
-                doc.getString("Note")
-        );
-
-        return ticketLogModel;
-
+        this.note = resultSet.getString("note");
     }
 
 }

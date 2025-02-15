@@ -2,64 +2,44 @@ package org.Project.CinemaSeatBooking.Model;
 
 import lombok.Data;
 import org.Project.CinemaSeatBooking.Service.GenreService;
-import org.bson.Document;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.List;
 
 @Data
 public class MovieModel {
 
-    private String MovieId;
+    private String movieId;
+    private String title;
+    private String description;
+    private String imageUrl;
+    private List<GenreModel> genreList;
+    private Integer movieTime;  // Minutes (Ex: 60 = 1 hour)
+    private Double movieCost;   // Revenue share percentage
+    private LocalDate releaseDate;
+    private Boolean isActive;
 
-    private String Title;
+    public MovieModel() {}
 
-    private String Description;
+    // DTO
+    public MovieModel(ResultSet resultSet) throws SQLException {
+        this.movieId = resultSet.getString("movie_id");
+        this.title = resultSet.getString("movie_title");
+        this.description = resultSet.getString("movie_description");
+        this.imageUrl = resultSet.getString("image_url");
 
-    private String ImageURL;
+        this.genreList = new GenreService().getMany(
+                "SELECT g.* FROM genre g JOIN movie_genre mg ON g.genre_id = mg.genre_id WHERE mg.movie_id = '" + this.movieId + "'"
+        );
 
-    private List<GenreModel> GenreList;
+        this.movieTime = resultSet.getInt("movie_time");
+        this.movieCost = resultSet.getDouble("movie_cost_percentage");
 
-    private Integer MovieTime;  // Minutes units (Ex: MovieTime = 60 = 1 hour)
+        this.releaseDate = resultSet.getObject("release_date", LocalDate.class);
 
-    private Double MovieCost; // Percentage of income to be shared with the film owner
-
-    private LocalDate ReleaseDate;  // Format: yyyy-MM-dd
-
-    private Boolean IsActive; // Whether to show the film (true = the move is still showing, false = the movie has been removed from the cinema)
-
-    public MovieModel DTO(Document doc) {
-        MovieModel result = new MovieModel();
-
-        result.setMovieId(doc.getObjectId("_id").toString());
-        result.setTitle(doc.getString("Title"));
-        result.setDescription(doc.getString("Description"));
-        result.setImageURL(doc.getString("ImageURL"));
-
-        // Sub DTO (Genre)
-        GenreService genreService = new GenreService();
-        List<GenreModel> genreModelList = new ArrayList<>();
-        List<String> genreIdList = (List<String>) doc.get("GenreList");
-        for (String genreId : genreIdList) {
-            GenreModel genreModel = genreService.FindOneById(genreId);
-            genreModelList.add(genreModel);
-        }
-        result.setGenreList(genreModelList);
-
-        result.setMovieTime(doc.getInteger("MovieTime"));
-        result.setMovieCost(doc.getDouble("MovieCost"));
-
-        // Date format
-        final LocalDate localDate = doc.getDate("ReleaseDate").toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate();
-        result.setReleaseDate(localDate);
-
-        result.setIsActive(doc.getBoolean("IsActive"));
-
-        return result;
+        this.isActive = resultSet.getBoolean("is_active");
     }
-
 }
