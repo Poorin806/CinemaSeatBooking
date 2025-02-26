@@ -44,7 +44,7 @@ public class TicketModel {
         for (SeatModel tmp : seatModelList)
             if (tmp.getSeatId() == seatId) this.seatModel = tmp;
 
-        this.customer = resultSet.getString("customer");
+        this.customer = resultSet.getString("customer_name");
         this.isActive = resultSet.getBoolean("is_active");
 
     }

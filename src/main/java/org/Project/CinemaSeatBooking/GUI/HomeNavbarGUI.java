@@ -8,7 +8,7 @@ public class HomeNavbarGUI {
 
     private static final JPanel navbar = new JPanel();
 
-    public static JPanel get() {
+    public static JPanel get(JPanel rootPanel) {
 
         navbar.setPreferredSize(new Dimension(824, 50));
         navbar.setBackground(new Color(109, 109, 109));
@@ -37,6 +37,14 @@ public class HomeNavbarGUI {
             btn.setForeground(new Color(51, 51, 51));
         }
 
+        cartBtn.addActionListener(e -> {
+            HomeGUI.changeToTicketCard();
+        });
+
+        loginBtn.addActionListener(e -> {
+            login(rootPanel);
+        });
+
         rightPanel.add(Box.createHorizontalGlue());
         rightPanel.add(cartBtn);
         rightPanel.add(Box.createHorizontalStrut(10));
@@ -49,6 +57,60 @@ public class HomeNavbarGUI {
 
         return navbar;
 
+    }
+
+    public static void login(JPanel rootPanel) {
+
+        JPanel loginForm = new JPanel();
+        loginForm.setSize(200, 100);
+        loginForm.setLayout(new BoxLayout(loginForm, BoxLayout.Y_AXIS));
+
+        JLabel username = new JLabel("Username:");
+        JLabel password = new JLabel("Password:");
+        for (JLabel label : new JLabel[] { username, password }) {
+            label.setFont(new Font("Arial", Font.PLAIN, 16));
+        }
+
+        JTextField usernameField = new JTextField(35);
+        JPasswordField passwordField = new JPasswordField(35);
+
+        loginForm.add(username);
+        loginForm.add(Box.createVerticalStrut(5));
+        loginForm.add(usernameField);
+        loginForm.add(Box.createVerticalStrut(10));
+        loginForm.add(password);
+        loginForm.add(Box.createVerticalStrut(5));
+        loginForm.add(passwordField);
+
+        // กำหนดชื่อปุ่มเป็น "Login" และ "Cancel"
+        String[] options = { "Login", "Cancel" };
+        int result = JOptionPane.showOptionDialog(
+                rootPanel,                      // Parent component
+                loginForm,                   // Form panel
+                "Login",                     // Title
+                JOptionPane.YES_NO_OPTION,   // Option type
+                JOptionPane.PLAIN_MESSAGE,   // Message type
+                null,                        // Icon (null = default)
+                options,                     // ปุ่มที่จะแสดง
+                options[0]                   // ปุ่ม Default (ปุ่ม "Login")
+        );
+
+        usernameField.requestFocus();
+
+        if (result == JOptionPane.YES_OPTION) {
+
+            if (
+                    usernameField.getText().equals("admin") &&
+                            passwordField.getText().equals("admin")
+            ) {
+                JOptionPane.showMessageDialog(loginForm, "Login successfully", "Cinema Seat Booking", JOptionPane.INFORMATION_MESSAGE);
+                HomeGUI.changeToAdminDashboard();
+            }  else {
+                JOptionPane.showMessageDialog(loginForm, "Failed to login, username or password incorrect", "Cinema Seat Booking", JOptionPane.ERROR_MESSAGE);
+                login(rootPanel);
+            }
+
+        }
     }
 
 }

@@ -252,7 +252,14 @@ public class MovieDetailGUI {
                 JOptionPane.showMessageDialog(rootFrame, "Please select the screening time", "Warnings", JOptionPane.WARNING_MESSAGE);
             } else {
                 popUpDialog.dispose();
-                HomeGUI.changeToSeatBooking(movieData);
+                try {
+                    HomeGUI.changeToSeatBooking(
+                            movieData,
+                            movieScheduleModelList.get(listOfSchedule.getSelectedIndex())
+                    );
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         });
         for (JButton btn : new JButton[]{closeBtn, continueBtn}) {

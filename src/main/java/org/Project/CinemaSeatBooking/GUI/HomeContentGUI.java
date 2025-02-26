@@ -22,7 +22,7 @@ public class HomeContentGUI {
         // Main content area
         homeContent.setPreferredSize(new Dimension(824, 768)); // Remaining space
 
-        JPanel navbar = HomeNavbarGUI.get();
+        JPanel navbar = HomeNavbarGUI.get(homeContent);
 
         JPanel movieList = new JPanel(new BorderLayout());
         movieList.setPreferredSize(new Dimension(homeContent.getWidth(), 700));

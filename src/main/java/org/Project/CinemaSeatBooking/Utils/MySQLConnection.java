@@ -3,6 +3,7 @@ package org.Project.CinemaSeatBooking.Utils;
 import io.github.cdimascio.dotenv.Dotenv;
 
 import java.sql.*;
+import java.util.UUID;
 
 public class MySQLConnection {
 
@@ -65,6 +66,10 @@ public class MySQLConnection {
         } catch (SQLException e) {
             throw new RuntimeException("Error executing query", e);
         }
+    }
+
+    public static String genreratePK() {
+        return UUID.randomUUID().toString();
     }
 
 

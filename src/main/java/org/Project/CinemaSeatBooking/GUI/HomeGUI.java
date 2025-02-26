@@ -1,6 +1,8 @@
 package org.Project.CinemaSeatBooking.GUI;
 
 import org.Project.CinemaSeatBooking.Model.MovieModel;
+import org.Project.CinemaSeatBooking.Model.MovieScheduleModel;
+import org.Project.CinemaSeatBooking.Utils.MySQLConnection;
 
 import javax.swing.*;
 import java.awt.*;
@@ -51,8 +53,9 @@ public class HomeGUI {
         container.setPreferredSize(new Dimension(1024, 768)); // fixed size
         container.setBackground(new Color(51, 51, 51, 255));
 
+        // TODO: Change to admin Sidebar when changeToAdminDashboard calling...
         JPanel sideBar = UserSideBarGUI.get();
-
+        JPanel adminSideBar = AdminSideBarGUI.get(homeContent);
 
         container.add(sideBar, BorderLayout.WEST);
 
@@ -60,6 +63,8 @@ public class HomeGUI {
         cards.add(HomeContentGUI.get(), "homeContent");
         cards.add(MovieDetailGUI.get(), "movieDetail");
         cards.add(SeatBookingGUI.get(), "seatBooking");
+        cards.add(TicketCardGUI.get(), "ticketCard");
+        cards.add(DashboardGUI.get(), "dashboard");
         container.add(cards, BorderLayout.CENTER);
         cardLayout.show(cards, "homeContent");
 
@@ -74,7 +79,7 @@ public class HomeGUI {
             @Override
             public void windowClosing(WindowEvent e) {
                 super.windowClosing(e);
-                // TODO: Close database connection
+                MySQLConnection.closeConnection();
                 frame.dispose();
             }
         });
@@ -85,6 +90,22 @@ public class HomeGUI {
     }
 
     public static void changeToHome() {
+
+        // ลบ Component ทั้งหมดในตำแหน่ง Sidebar ก่อน
+        container.removeAll();
+
+        // เพิ่ม UserSideBarGUI กลับเข้าไปที่ตำแหน่ง WEST (ฝั่งซ้าย)
+        JPanel userSideBar = UserSideBarGUI.get();
+        container.add(userSideBar, BorderLayout.WEST);
+
+        // เพิ่มเนื้อหาหลัก (cards) กลับเข้ามาที่ CENTER (ฝั่งกลาง)
+        container.add(cards, BorderLayout.CENTER);
+
+        // รีเฟรชและวาดใหม่
+        container.revalidate();
+        container.repaint();
+
+        // แสดงหน้า Home
         cardLayout.show(cards, "homeContent");
     }
 
@@ -93,10 +114,29 @@ public class HomeGUI {
         cardLayout.show(cards, "movieDetail");
     }
 
-    public static void changeToSeatBooking(MovieModel data) {
-        SeatBookingGUI.setMovieData(data);
+    public static void changeToSeatBooking(MovieModel movieModel, MovieScheduleModel movieScheduleModel) throws SQLException {
+        SeatBookingGUI.setMovieData(movieModel, movieScheduleModel);
         SeatBookingGUI.clearSeatSelections();
         cardLayout.show(cards, "seatBooking");
+    }
+
+    public static void changeToTicketCard() {
+        TicketCardGUI.refreshData();
+        cardLayout.show(cards, "ticketCard");
+    }
+
+    public static void changeToAdminDashboard() {
+
+        container.remove(0); // index 0 คือ sidebar ที่อยู่ฝั่งซ้ายของ container
+
+        JPanel adminSideBar = AdminSideBarGUI.get(homeContent);
+        container.add(adminSideBar, BorderLayout.WEST);
+
+        container.revalidate();
+        container.repaint();
+
+        cardLayout.show(cards, "dashboard");
+
     }
 
     public static JFrame getRootFrame() {
