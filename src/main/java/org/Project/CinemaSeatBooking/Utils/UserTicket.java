@@ -21,4 +21,20 @@ public class UserTicket {
         userTicketList.add(ticketModel);
     }
 
+    public static void findAndUpdate(TicketModel ticketModel) {
+
+        for (int i = 0; i < userTicketList.size(); i++) {
+
+            TicketModel existingTicket = userTicketList.get(i);
+
+            if (existingTicket.getTicketId().equals(ticketModel.getTicketId())) {
+                userTicketList.set(i, ticketModel);
+                break;
+            }
+
+        }
+
+    }
+
+
 }

@@ -1,6 +1,9 @@
 package org.Project.CinemaSeatBooking.GUI;
 
+import org.Project.CinemaSeatBooking.Model.MovieModel;
+import org.Project.CinemaSeatBooking.Model.MovieScheduleModel;
 import org.Project.CinemaSeatBooking.Model.TicketModel;
+import org.Project.CinemaSeatBooking.Service.MovieScheduleService;
 import org.Project.CinemaSeatBooking.Utils.BackgroundImageJPanel;
 import org.Project.CinemaSeatBooking.Utils.EssentialsUtils;
 import org.Project.CinemaSeatBooking.Utils.UserTicket;
@@ -8,6 +11,7 @@ import org.Project.CinemaSeatBooking.Utils.UserTicket;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,6 +23,8 @@ public class TicketCardGUI {
     private static final JScrollPane scrollPane = new JScrollPane();
 
     private static List<TicketModel> ticketModelList = new ArrayList<>();
+
+    private static List<MovieScheduleModel> movieScheduleModelList = new ArrayList<>();
 
     public static JPanel get() {
 
@@ -102,6 +108,18 @@ public class TicketCardGUI {
             btn.setPreferredSize(new Dimension(150, 30));
             btn.setMaximumSize(new Dimension(150, 30));
         }
+
+        changeBtn.addActionListener(e -> {
+            try {
+                selectBookingDetail(
+                        ticketModel,
+                        ticketModel.getMovieScheduleModel().getMovieModel()
+                );
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+
         buttonPanel.add(changeBtn);
         buttonPanel.add(Box.createHorizontalStrut(15));
         buttonPanel.add(cancelBtn);
@@ -160,6 +178,135 @@ public class TicketCardGUI {
 
         content.revalidate();
         content.repaint();
+    }
+
+    private static void selectBookingDetail(TicketModel ticketModel, MovieModel movieData) throws SQLException {
+
+        JFrame rootFrame = HomeGUI.getRootFrame();
+        JDialog popUpDialog = new JDialog(rootFrame, "Select Movie Booking Detail (Changing)", true);
+        popUpDialog.setSize(760, 500);
+        popUpDialog.setLayout(new BorderLayout());
+
+        // Container Panel
+        JPanel popUpContainer = new JPanel();
+        popUpContainer.setOpaque(true);
+        popUpContainer.setBackground(new Color(51, 51, 51));
+        popUpContainer.setLayout(new BoxLayout(popUpContainer, BoxLayout.Y_AXIS));
+        popUpContainer.setSize(popUpDialog.getWidth(), popUpDialog.getHeight());
+        popUpContainer.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        // Header Panel
+        JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        headerPanel.setOpaque(false);
+        headerPanel.setPreferredSize(new Dimension(popUpDialog.getWidth(), 100));
+
+        JLabel movieTitleLabel = new JLabel(movieData.getTitle());
+        movieTitleLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        JLabel movieDescriptionLabel = new JLabel(movieData.getDescription());
+        movieDescriptionLabel.setFont(new Font("Arial", Font.ITALIC, 18));
+        JLabel releaseDateLabel = new JLabel("Release Date: " + EssentialsUtils.formatDate(movieData.getReleaseDate().toString()));
+        releaseDateLabel.setFont(new Font("Arial", Font.ITALIC, 16));
+        for (JLabel tmp : new JLabel[]{ movieTitleLabel, movieDescriptionLabel, releaseDateLabel }) {
+            tmp.setForeground(Color.WHITE);
+        }
+
+        JPanel movieDetailsPanel = new JPanel();
+        movieDetailsPanel.setLayout(new BoxLayout(movieDetailsPanel, BoxLayout.Y_AXIS));
+        movieDetailsPanel.setOpaque(false);
+        movieDetailsPanel.add(Box.createVerticalGlue());
+        movieDetailsPanel.add(movieTitleLabel);
+        movieDetailsPanel.add(Box.createVerticalStrut(5));
+        movieDetailsPanel.add(movieDescriptionLabel);
+        movieDetailsPanel.add(Box.createVerticalStrut(5));
+        movieDetailsPanel.add(releaseDateLabel);
+        movieDetailsPanel.add(Box.createVerticalGlue());
+
+        BackgroundImageJPanel movieImg = new BackgroundImageJPanel();
+        movieImg.setPreferredSize(new Dimension(75, 100));
+        movieImg.setBackground(new Color(217, 217, 217));
+        movieImg.setImage(movieData.getImageUrl(), false);
+        headerPanel.add(movieImg);
+        headerPanel.add(movieDetailsPanel);
+
+        // Selection Panel
+        JPanel selectionPanel = new JPanel();
+        selectionPanel.setOpaque(false);
+        selectionPanel.setLayout(new BoxLayout(selectionPanel, BoxLayout.Y_AXIS));
+        selectionPanel.setPreferredSize(new Dimension(popUpDialog.getWidth(), 400));
+        selectionPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        // Schedule list
+        JPanel selectionContentPanel = new JPanel(new BorderLayout());
+        selectionContentPanel.setPreferredSize(new Dimension(popUpDialog.getWidth(), 360));
+
+        String sql = "SELECT * FROM movie_schedule ms WHERE ms.movie_id = '" + movieData.getMovieId() + "'";
+        movieScheduleModelList = new MovieScheduleService().getMany(sql);
+
+        DefaultListModel<String> listModel = new DefaultListModel<>();
+        for (MovieScheduleModel tmp : movieScheduleModelList) {
+            String schedule = tmp.getScheduleId() + ", ";
+            schedule += EssentialsUtils.formatDateTime(tmp.getShowTime(), true) + " - ";
+            schedule += EssentialsUtils.formatDateTime(tmp.getEndTime(), true) + " [";
+            schedule += tmp.getRoomModel().getName() + "]";
+            listModel.addElement(schedule);
+        }
+        JList listOfSchedule = new JList(listModel);
+        listOfSchedule.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        listOfSchedule.setLayoutOrientation(JList.VERTICAL_WRAP);
+        listOfSchedule.setVisibleRowCount(-1);
+
+        JScrollPane listScroller = new JScrollPane(listOfSchedule);
+        listScroller.setPreferredSize(new Dimension(popUpDialog.getWidth(), 360));
+        selectionContentPanel.add(listScroller, BorderLayout.CENTER);
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
+        JButton closeBtn = new JButton("Cancel");
+        JButton continueBtn = new JButton("Booking");
+        closeBtn.addActionListener(e -> popUpDialog.dispose());
+        continueBtn.addActionListener(e -> {
+            if (listOfSchedule.isSelectionEmpty()) {
+                JOptionPane.showMessageDialog(rootFrame, "Please select the screening time", "Warnings", JOptionPane.WARNING_MESSAGE);
+            } else {
+                popUpDialog.dispose();
+                try {
+                    HomeGUI.changeToChangingSeat(
+                            ticketModel,
+                            movieData,
+                            movieScheduleModelList.get(listOfSchedule.getSelectedIndex())
+                    );
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        });
+        for (JButton btn : new JButton[]{closeBtn, continueBtn}) {
+
+            btn.setPreferredSize(new Dimension(200, 40));
+            btn.setMaximumSize(new Dimension(200, 40));
+            btn.setFocusPainted(false);
+            btn.setBorderPainted(false);
+            btn.setBackground(new Color(217, 217, 217));
+            btn.setForeground(new Color(51, 51, 51));
+            btn.setFont(new Font("Arial", Font.BOLD, 14));
+
+        }
+        buttonPanel.setOpaque(false);
+        buttonPanel.setMaximumSize(new Dimension(760, 40));
+        buttonPanel.add(continueBtn);
+        buttonPanel.add(closeBtn);
+
+        selectionPanel.add(selectionContentPanel);
+        selectionPanel.add(Box.createVerticalStrut(10));
+        selectionPanel.add(buttonPanel);
+
+        popUpContainer.add(headerPanel);
+        popUpContainer.add(Box.createVerticalStrut(10));
+        popUpContainer.add(selectionPanel);
+
+        popUpDialog.add(popUpContainer, BorderLayout.CENTER);
+        popUpDialog.setLocationRelativeTo(rootFrame);
+        popUpDialog.setVisible(true);
+
     }
 
 }
