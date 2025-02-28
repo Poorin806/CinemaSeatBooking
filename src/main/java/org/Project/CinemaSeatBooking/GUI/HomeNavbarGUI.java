@@ -104,7 +104,7 @@ public class HomeNavbarGUI {
                             passwordField.getText().equals("admin")
             ) {
                 JOptionPane.showMessageDialog(loginForm, "Login successfully", "Cinema Seat Booking", JOptionPane.INFORMATION_MESSAGE);
-                HomeGUI.changeToAdminDashboard();
+                HomeGUI.changeToAdminDashboard(true);
             }  else {
                 JOptionPane.showMessageDialog(loginForm, "Failed to login, username or password incorrect", "Cinema Seat Booking", JOptionPane.ERROR_MESSAGE);
                 login(rootPanel);

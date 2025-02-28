@@ -20,9 +20,9 @@ public class AdminSideBarGUI {
 
         Dimension buttonSize = new Dimension(180, 50); // ขนาดปุ่มคงที่
 
-        JButton homeBtn = new JButton("...");
-        JButton movieBtn = new JButton("...");
-        JButton showtimeBtn = new JButton("...");
+        JButton dashboardBtn = new JButton("Dashboard");
+        JButton movieManagementBtn = new JButton("Movie");
+        JButton theaterManagementBtn = new JButton("Theater");
         JButton logoutBtn = new JButton("Logout");
 
         // Event listeners
@@ -32,7 +32,7 @@ public class AdminSideBarGUI {
         });
 
         // บังคับขนาดปุ่มให้เท่ากัน
-        for (JButton btn : new JButton[]{homeBtn, movieBtn, showtimeBtn, logoutBtn}) {
+        for (JButton btn : new JButton[]{movieManagementBtn, theaterManagementBtn, logoutBtn, dashboardBtn}) {
             btn.setAlignmentX(Component.CENTER_ALIGNMENT);
             btn.setMinimumSize(buttonSize);
             btn.setPreferredSize(buttonSize);
@@ -45,13 +45,22 @@ public class AdminSideBarGUI {
             btn.setFont(new Font("Arial", Font.BOLD, 24));
         }
 
-        // ทำให้ปุ่มอยู่ตรงกลางแนวตั้ง
+        dashboardBtn.addActionListener(e -> {
+            HomeGUI.changeToAdminDashboard(false);
+        });
+        movieManagementBtn.addActionListener(e -> {
+            HomeGUI.changeToMovieManagement();
+        });
+        theaterManagementBtn.addActionListener(e -> {
+            HomeGUI.changeToTheaterManagement();
+        });
+
         sideBarButtonPanel.add(Box.createVerticalGlue());
-        sideBarButtonPanel.add(homeBtn);
+        sideBarButtonPanel.add(dashboardBtn);
         sideBarButtonPanel.add(Box.createVerticalStrut(15));
-        sideBarButtonPanel.add(movieBtn);
+        sideBarButtonPanel.add(movieManagementBtn);
         sideBarButtonPanel.add(Box.createVerticalStrut(15));
-        sideBarButtonPanel.add(showtimeBtn);
+        sideBarButtonPanel.add(theaterManagementBtn);
         sideBarButtonPanel.add(Box.createVerticalStrut(15));
         sideBarButtonPanel.add(logoutBtn);
         sideBarButtonPanel.add(Box.createVerticalGlue());

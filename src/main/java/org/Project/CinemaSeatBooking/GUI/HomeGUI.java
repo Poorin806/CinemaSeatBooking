@@ -2,6 +2,7 @@ package org.Project.CinemaSeatBooking.GUI;
 
 import org.Project.CinemaSeatBooking.Model.MovieModel;
 import org.Project.CinemaSeatBooking.Model.MovieScheduleModel;
+import org.Project.CinemaSeatBooking.Model.TicketModel;
 import org.Project.CinemaSeatBooking.Utils.MySQLConnection;
 
 import javax.swing.*;
@@ -65,6 +66,8 @@ public class HomeGUI {
         cards.add(SeatBookingGUI.get(), "seatBooking");
         cards.add(TicketCardGUI.get(), "ticketCard");
         cards.add(DashboardGUI.get(), "dashboard");
+        cards.add(MovieManagementGUI.get(), "movieManagement");
+        cards.add(TheaterManagementGUI.get(), "theaterManagement");
         container.add(cards, BorderLayout.CENTER);
         cardLayout.show(cards, "homeContent");
 
@@ -120,23 +123,39 @@ public class HomeGUI {
         cardLayout.show(cards, "seatBooking");
     }
 
+    public static void changeToChangingSeat(TicketModel ticketModel, MovieModel movieModel, MovieScheduleModel movieScheduleModel) throws SQLException {
+        ChangingSeatGUI.setMovieData(ticketModel, movieModel, movieScheduleModel);
+        ChangingSeatGUI.clearSeatSelections();
+        cardLayout.show(cards, "seatBooking");
+    }
+
     public static void changeToTicketCard() {
         TicketCardGUI.refreshData();
         cardLayout.show(cards, "ticketCard");
     }
 
-    public static void changeToAdminDashboard() {
+    public static void changeToAdminDashboard(boolean fromLoginBtn) {
 
-        container.remove(0); // index 0 คือ sidebar ที่อยู่ฝั่งซ้ายของ container
+        if (fromLoginBtn) {
+            container.remove(0);
 
-        JPanel adminSideBar = AdminSideBarGUI.get(homeContent);
-        container.add(adminSideBar, BorderLayout.WEST);
+            JPanel adminSideBar = AdminSideBarGUI.get(homeContent);
+            container.add(adminSideBar, BorderLayout.WEST);
 
-        container.revalidate();
-        container.repaint();
+            container.revalidate();
+            container.repaint();
+        }
 
         cardLayout.show(cards, "dashboard");
 
+    }
+
+    public static void changeToMovieManagement() {
+        cardLayout.show(cards, "movieManagement");
+    }
+
+    public static void changeToTheaterManagement() {
+        cardLayout.show(cards, "theaterManagement");
     }
 
     public static JFrame getRootFrame() {
