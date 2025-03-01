@@ -1,6 +1,7 @@
 package org.Project.CinemaSeatBooking.Service;
 
 import org.Project.CinemaSeatBooking.Model.TicketLogModel;
+import org.Project.CinemaSeatBooking.Model.TicketModel;
 import org.Project.CinemaSeatBooking.Utils.MySQLConnection;
 
 import java.sql.ResultSet;
@@ -29,8 +30,10 @@ public class TicketLogService implements MySQLQueryInterface<TicketLogModel> {
     @Override
     public TicketLogModel getOne(String sql) throws SQLException {
         ResultSet resultSet = MySQLConnection.fetchData(sql);
-        if (resultSet.wasNull()) return null;
-        return new TicketLogModel(resultSet);
+        if (resultSet.next())
+            return new TicketLogModel(resultSet);
+
+        return null;
     }
 
 }

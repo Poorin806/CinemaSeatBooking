@@ -36,6 +36,7 @@ public class HomeGUI {
         frame.setMinimumSize(new Dimension(1124, 868));
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setTitle("Cinema Seat Booking");
+        frame.setLocationRelativeTo(null);
 
         // App Icon
         Image appIcon = Toolkit.getDefaultToolkit().getImage(
@@ -68,6 +69,7 @@ public class HomeGUI {
         cards.add(DashboardGUI.get(), "dashboard");
         cards.add(MovieManagementGUI.get(), "movieManagement");
         cards.add(TheaterManagementGUI.get(), "theaterManagement");
+        cards.add(ChangingSeatGUI.get(), "seatChanging");
         container.add(cards, BorderLayout.CENTER);
         cardLayout.show(cards, "homeContent");
 
@@ -126,7 +128,7 @@ public class HomeGUI {
     public static void changeToChangingSeat(TicketModel ticketModel, MovieModel movieModel, MovieScheduleModel movieScheduleModel) throws SQLException {
         ChangingSeatGUI.setMovieData(ticketModel, movieModel, movieScheduleModel);
         ChangingSeatGUI.clearSeatSelections();
-        cardLayout.show(cards, "seatBooking");
+        cardLayout.show(cards, "seatChanging");
     }
 
     public static void changeToTicketCard() {

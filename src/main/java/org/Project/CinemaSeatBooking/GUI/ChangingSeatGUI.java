@@ -10,6 +10,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -23,9 +24,9 @@ public class ChangingSeatGUI {
     private static List<String> seatId = new ArrayList<>();
     private static List<JToggleButton> seatButtons = new ArrayList<>();
     private static List<String> seatBooking = new ArrayList<>();
+    private static TicketModel currentTicket = new TicketModel();
 
     private static MovieScheduleModel movieScheduleData = new MovieScheduleModel();
-    private static TicketModel ticketData = new TicketModel();
     private static List<SeatModel> seatModelArrayList = new ArrayList<>();
 
     public static JPanel get() {
@@ -65,16 +66,12 @@ public class ChangingSeatGUI {
         int rows = 0;
         int index = 0;
 
-//        if (seatModelArrayList.size() == 0) {
-//            System.out.println("Seat data empty");
-//        }
-
         JPanel cartPanel = new JPanel();
         cartPanel.setOpaque(false);
         cartPanel.setLayout(new BoxLayout(cartPanel, BoxLayout.X_AXIS));
         cartPanel.setPreferredSize(new Dimension(824, 50)); // ขนาดของ cartPanel
         cartPanel.setMaximumSize(new Dimension(824, 50));
-        JButton cartBtn = new JButton("Cart");
+        JButton cartBtn = new JButton("Change Seat");
         cartBtn.setPreferredSize(new Dimension(250, 50));
         cartBtn.setMaximumSize(new Dimension(250, 50));
         cartBtn.setBackground(new Color(217, 217, 217));
@@ -85,7 +82,11 @@ public class ChangingSeatGUI {
         cartPanel.add(Box.createHorizontalGlue());
 
         cartBtn.addActionListener(e -> {
-            cartSeatBooking();
+            try {
+                cartSeatBooking();
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
         });
 
         content.add(headerPanel);
@@ -108,7 +109,7 @@ public class ChangingSeatGUI {
     public static void setMovieData(TicketModel ticketModel, MovieModel movieModel, MovieScheduleModel movieScheduleModel) throws SQLException {
         movieTitle.setText(movieModel.getTitle());
         movieScheduleData = movieScheduleModel;
-        ticketData = ticketModel;
+        currentTicket = ticketModel;
 
         String sql = "SELECT * FROM seat WHERE seat.room_id = '" + movieScheduleModel.getRoomModel().getRoomId() + "'";
         seatModelArrayList = new SeatService().getMany(sql);
@@ -122,15 +123,15 @@ public class ChangingSeatGUI {
         seatBooking.clear();
     }
 
-    private static void cartSeatBooking() {
+    private static void cartSeatBooking() throws SQLException {
 
         if (seatBooking.isEmpty()) {
-            JOptionPane.showMessageDialog(content, "Please select a seat before change booking", "Cinema Seat Booking", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(content, "Please select a seat before changing", "Cinema Seat Booking", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         if (seatBooking.size() > 1) {
-            JOptionPane.showMessageDialog(content, "Cannot change booking more than 1 seat", "Cinema Seat Booking", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(content, "Cannot change more than 1 seat", "Cinema Seat Booking", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -138,13 +139,18 @@ public class ChangingSeatGUI {
                 .filter(data -> seatBooking.contains(String.valueOf(data.getSeatId())))
                 .toList();
 
-        String msgBody = "[Confirm your seat booking]";
+        String msgBody = "[Confirm your seat changing]";
         double totalPrice = 0.00d;
         for (SeatModel tmp : confirmSeatBookingData) {
             msgBody += "\n- " + tmp.getRow() + tmp.getNumber() + " (" + tmp.getSeatTypeModel().getName() + " - " + tmp.getSeatTypeModel().getPrice() + ")";
             totalPrice += tmp.getSeatTypeModel().getPrice();
         }
-        msgBody += "\n\n ** Total: " + totalPrice + " **";
+        if (totalPrice <= currentTicket.getTotalPrice()) {
+            msgBody += "\n\n ** Total: - **";
+        } else {
+            double priceDifference = currentTicket.getTotalPrice() - totalPrice;
+            msgBody += String.format("\n\n ** Total: %d... (The seat you chose has a different price) **", priceDifference);
+        }
 
         int choice = JOptionPane.showConfirmDialog( // 0 = OK, 2 = Cancel
                 content,
@@ -162,27 +168,29 @@ public class ChangingSeatGUI {
                 Optional<SeatModel> seatData = seatModelArrayList.stream().filter(data -> data.getSeatId() == Integer.parseInt(s)).findFirst();
                 if (seatData.isPresent()) {
 
-                    String pk = MySQLConnection.genreratePK();
-                    double seatPrice = seatData.get().getSeatTypeModel().getPrice();
+                    String logPk = MySQLConnection.genreratePK();
+                    int currentSeat = currentTicket.getSeatModel().getSeatId();
+                    int newSeat = seatData.get().getSeatId();
+                    String ticketId = currentTicket.getTicketId();
 
-                    // TODO: Change sql command to update ticket data & make a UserTicket Utils to update ticket data instead of add new ticket cart
-                    String sql = "UPDATE ticket t SET t.seat_id = " + seatData.get().getSeatId() + ", t.total_price = " + seatPrice + " WHERE t.ticket_id = '" + ticketData.getTicketId() + "'";
-                    if (MySQLConnection.query(sql) > 0) {
+                    // Insert to log
+                    String logSql = "INSERT INTO ticket_log VALUES ('" + logPk + "', '" + ticketId + "', '" + LocalDateTime.now() + "', 1, " + currentSeat + ", " + newSeat + ", null)";
+                    if (MySQLConnection.query(logSql) > 0) {
+                        String ticketSql = "UPDATE ticket t SET t.movie_schedule_id = '" + movieScheduleData.getScheduleId() + "', t.seat_id = " + newSeat + ", t.total_price = " + seatData.get().getSeatTypeModel().getPrice() + " WHERE t.ticket_id = '" + ticketId + "'";
+                        if (MySQLConnection.query(ticketSql) > 0) {
 
-                        TicketModel ticketModel = new TicketModel();
-                        ticketModel.setTicketId(pk);
-                        ticketModel.setSeatModel(seatData.get());
-                        ticketModel.setCustomer(null);
-                        ticketModel.setIsActive(true);
-                        ticketModel.setMovieScheduleModel(movieScheduleData);
-                        ticketModel.setTotalPrice(seatPrice);
+                            // Update user ticket cart
+                            String updatedTicketSql = "SELECT * FROM ticket t WHERE t.ticket_id = '" + ticketId + "'";
+                            TicketModel updatedTicketData = new TicketService().getOne(updatedTicketSql);
+                            UserTicket.findAndUpdate(updatedTicketData);
 
-                        // Add ticket model into user ticket (Utils)
-                        UserTicket.addTicketData(ticketModel);
-
-                        System.out.println("Booked");
+                            System.out.println("Change seat successfully");
+                        } else {
+                            System.err.println("Failed to change seat");
+                        }
+                    } else {
+                        System.err.println("Failed to add log");
                     }
-                    else System.out.println("Failed to book");
 
                 } else {
                     System.out.println("Seat ID " + s + " not found");
@@ -199,7 +207,7 @@ public class ChangingSeatGUI {
 
     private static void setSeatData() throws SQLException {
 
-        String sql = "SELECT * FROM ticket t WHERE t.movie_schedule_id = '" + movieScheduleData.getScheduleId() + "'";
+        String sql = "SELECT * FROM ticket t WHERE t.movie_schedule_id = '" + movieScheduleData.getScheduleId() + "' AND t.is_active = true";
         List<TicketModel> ticketModelList = new TicketService().getMany(sql);
 
         List<Integer> bookedSeat = ticketModelList.stream()

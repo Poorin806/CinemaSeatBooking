@@ -1,6 +1,7 @@
 package org.Project.CinemaSeatBooking.Service;
 
 import org.Project.CinemaSeatBooking.Model.LogStatusModel;
+import org.Project.CinemaSeatBooking.Model.MovieScheduleModel;
 import org.Project.CinemaSeatBooking.Utils.MySQLConnection;
 
 import java.sql.ResultSet;
@@ -29,7 +30,9 @@ public class LogStatusService implements MySQLQueryInterface<LogStatusModel> {
     @Override
     public LogStatusModel getOne(String sql) throws SQLException {
         ResultSet resultSet = MySQLConnection.fetchData(sql);
-        if (resultSet.wasNull()) return null;
-        return new LogStatusModel(resultSet);
+        if (resultSet.next())
+            return new LogStatusModel(resultSet);
+
+        return null;
     }
 }

@@ -1,6 +1,7 @@
 package org.Project.CinemaSeatBooking.Service;
 
 import org.Project.CinemaSeatBooking.Model.GenreModel;
+import org.Project.CinemaSeatBooking.Model.MovieScheduleModel;
 import org.Project.CinemaSeatBooking.Utils.MySQLConnection;
 
 import java.sql.ResultSet;
@@ -36,8 +37,10 @@ public class GenreService implements MySQLQueryInterface<GenreModel> {
     public GenreModel getOne(String sql) throws SQLException {
 
         ResultSet resultSet = MySQLConnection.fetchData(sql);
-        if (resultSet.wasNull()) return null;
-        return new GenreModel(resultSet);
+        if (resultSet.next())
+            return new GenreModel(resultSet);
+
+        return null;
 
     }
 

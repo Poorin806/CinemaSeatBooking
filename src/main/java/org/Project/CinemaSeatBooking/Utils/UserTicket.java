@@ -36,5 +36,16 @@ public class UserTicket {
 
     }
 
+    public static void deleteTicketData(TicketModel ticketModel) {
+        userTicketList.removeIf(existingTicket ->
+                existingTicket.getTicketId().equals(ticketModel.getTicketId())
+        );
+    }
+
+    public static void deleteTicketData(String ticketId) {
+        userTicketList.removeIf(existingTicket ->
+                existingTicket.getTicketId().equals(ticketId)
+        );
+    }
 
 }
