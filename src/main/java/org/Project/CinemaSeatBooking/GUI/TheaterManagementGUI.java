@@ -27,7 +27,7 @@ public class TheaterManagementGUI {
         content.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         // Title "Theater"
-        JLabel titleLabel = new JLabel("Theater");
+        JLabel titleLabel = new JLabel("Theater Manage");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
         titleLabel.setForeground(Color.WHITE);
         titleLabel.setHorizontalAlignment(SwingConstants.LEFT);
@@ -107,16 +107,13 @@ public class TheaterManagementGUI {
         List<RoomModel> roomList = new RoomService().getAll();
         theaterNumbers.clear();
 
-        for (RoomModel room : roomList) {
-            theaterNumbers.add(room.getRoomId());  
-        }
-
         // Clear Panel และเติมโรงภาพยนตร์ที่มีอยู่
         theaterPanel.removeAll();
 
-        for (String theaterName : theaterNumbers) {
-            addTheaterBox(theaterName);
+        for (RoomModel room : roomList) {
+        addTheaterBox(room.getRoomId(), room.getName());  
         }
+
 
         theaterPanel.revalidate();
         theaterPanel.repaint();
@@ -129,13 +126,13 @@ public class TheaterManagementGUI {
     }
 
     //เพิ่มช่องโรงภาพยนตร์ใน UI
-    private static void addTheaterBox(String theaterName) throws SQLException {
+    private static void addTheaterBox(String theaterID,String TheatrName) throws SQLException {
         JPanel theaterBox = new JPanel();
         theaterBox.setPreferredSize(new Dimension(150, 100));
         theaterBox.setBackground(new Color(100, 100, 100));
         theaterBox.setLayout(new BorderLayout());
 
-        JLabel label = new JLabel(theaterName);
+        JLabel label = new JLabel(TheatrName);
         label.setForeground(Color.WHITE);
         label.setFont(new Font("Arial", Font.PLAIN, 18));
 
@@ -145,10 +142,17 @@ public class TheaterManagementGUI {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         buttonPanel.setBackground(new Color(100, 100, 100));
 
+        JButton EditButton = new JButton("Edit");
+        EditButton.setFont(new Font("Arial", Font.PLAIN, 12));
+        EditButton.setBackground(new Color(0, 191, 255));
+        EditButton.setForeground(Color.WHITE);
+        
+
         JButton deleteButton = new JButton("Delete");
         deleteButton.setFont(new Font("Arial", Font.PLAIN, 12));
         deleteButton.setBackground(new Color(150, 50, 50));
         deleteButton.setForeground(Color.WHITE);
+        
 
         // ลบโรงภาพยนตร์เมื่อกดปุ่ม Delete
         deleteButton.addActionListener(new ActionListener() {
@@ -156,7 +160,7 @@ public class TheaterManagementGUI {
             public void actionPerformed(ActionEvent e) {
                 try {
                     // ลบโรงภาพยนตร์
-                    String sql = "DELETE FROM room WHERE room_id = '" + theaterName + "'";
+                    String sql = "DELETE FROM room WHERE room_id = '" + theaterID + "'";
                     MySQLConnection.query(sql); 
                     //System.out.print(sql);
 
@@ -168,7 +172,21 @@ public class TheaterManagementGUI {
             }
         });
 
+        EditButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    HomeGUI.changeToEditRoom(theaterID);
+                } catch (SQLException e1) {
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                }
+            }
+        });
+
         buttonPanel.add(deleteButton);
+        buttonPanel.add(EditButton);
+
 
         theaterBox.add(buttonPanel, BorderLayout.SOUTH);
 

@@ -71,6 +71,7 @@ public class HomeGUI {
         cards.add(MovieManagementGUI.get(), "movieManagement");
         cards.add(TheaterManagementGUI.get(), "theaterManagement");
         cards.add(ChangingSeatGUI.get(), "seatChanging");
+        cards.add(RoomEditGUI.get(), "editRoom");
         container.add(cards, BorderLayout.CENTER);
         cardLayout.show(cards, "homeContent");
 
@@ -118,6 +119,10 @@ public class HomeGUI {
     public static void changeToAllMovie() throws SQLException {
         AllMovieGUI.refreshData();
         cardLayout.show(cards, "allMovie");
+    }
+    public static void changeToEditRoom(String theaterName) throws SQLException {
+        RoomEditGUI.setData(theaterName);
+        cardLayout.show(cards, "editRoom");
     }
 
     public static void changeToMovieDetail(MovieModel movieModel) throws SQLException {
@@ -169,5 +174,9 @@ public class HomeGUI {
     public static JFrame getRootFrame() {
         return frame;
     }
+
+    
+
+	
 
 }
