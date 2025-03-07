@@ -63,6 +63,7 @@ public class HomeGUI {
 
         // Dynamics Content
         cards.add(HomeContentGUI.get(), "homeContent");
+        cards.add(AllMovieGUI.get(), "allMovie");
         cards.add(MovieDetailGUI.get(), "movieDetail");
         cards.add(SeatBookingGUI.get(), "seatBooking");
         cards.add(TicketCardGUI.get(), "ticketCard");
@@ -112,6 +113,11 @@ public class HomeGUI {
 
         // แสดงหน้า Home
         cardLayout.show(cards, "homeContent");
+    }
+
+    public static void changeToAllMovie() throws SQLException {
+        AllMovieGUI.refreshData();
+        cardLayout.show(cards, "allMovie");
     }
 
     public static void changeToMovieDetail(MovieModel movieModel) throws SQLException {

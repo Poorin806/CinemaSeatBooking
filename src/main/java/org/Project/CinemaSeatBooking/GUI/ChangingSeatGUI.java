@@ -149,7 +149,7 @@ public class ChangingSeatGUI {
             msgBody += "\n\n ** Total: - **";
         } else {
             double priceDifference = currentTicket.getTotalPrice() - totalPrice;
-            msgBody += String.format("\n\n ** Total: %d... (The seat you chose has a different price) **", priceDifference);
+            msgBody += String.format("\n\n ** Total: " + priceDifference + "(The seat you chose has a different price) **");
         }
 
         int choice = JOptionPane.showConfirmDialog( // 0 = OK, 2 = Cancel
