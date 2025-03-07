@@ -1,8 +1,11 @@
 package org.Project.CinemaSeatBooking.GUI;
 
+import org.Project.CinemaSeatBooking.Utils.MySQLConnection;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.sql.SQLException;
 
 public class UserSideBarGUI {
 
@@ -22,7 +25,7 @@ public class UserSideBarGUI {
 
         JButton homeBtn = new JButton("Home");
         JButton movieBtn = new JButton("Movie");
-        JButton showtimeBtn = new JButton("Showtime");
+        JButton exitBtn = new JButton("Exit");
 
         // Event listeners
         homeBtn.addActionListener(e -> {
@@ -30,11 +33,23 @@ public class UserSideBarGUI {
         });
 
         movieBtn.addActionListener(e -> {
+            try {
+                HomeGUI.changeToAllMovie();
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
 
+        exitBtn.addActionListener(e -> {
+            int isConfirmed = JOptionPane.showConfirmDialog(HomeGUI.getRootFrame(), "Are you sure?", "Cinema Seat Booking", JOptionPane.YES_NO_OPTION);
+            if (isConfirmed == JOptionPane.YES_OPTION) {
+                MySQLConnection.closeConnection();
+                System.exit(0);
+            }
         });
 
         // บังคับขนาดปุ่มให้เท่ากัน
-        for (JButton btn : new JButton[]{homeBtn, movieBtn, showtimeBtn}) {
+        for (JButton btn : new JButton[]{homeBtn, movieBtn, exitBtn}) {
             btn.setAlignmentX(Component.CENTER_ALIGNMENT);
             btn.setMinimumSize(buttonSize);
             btn.setPreferredSize(buttonSize);
@@ -53,7 +68,7 @@ public class UserSideBarGUI {
         sideBarButtonPanel.add(Box.createVerticalStrut(15));
         sideBarButtonPanel.add(movieBtn);
         sideBarButtonPanel.add(Box.createVerticalStrut(15));
-        sideBarButtonPanel.add(showtimeBtn);
+        sideBarButtonPanel.add(exitBtn);
         sideBarButtonPanel.add(Box.createVerticalGlue());
 
         JLabel title = new JLabel("Cinema Seat Booking");
