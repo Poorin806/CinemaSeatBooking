@@ -2,6 +2,8 @@ package org.Project.CinemaSeatBooking.Service;
 
 import org.Project.CinemaSeatBooking.Model.MovieGenreModel;
 import org.Project.CinemaSeatBooking.Model.MovieModel;
+import org.Project.CinemaSeatBooking.Model.MovieScheduleModel;
+import org.Project.CinemaSeatBooking.Model.TicketModel;
 import org.Project.CinemaSeatBooking.Utils.MySQLConnection;
 
 import java.sql.ResultSet;
@@ -18,9 +20,7 @@ public class MovieGenreService implements MySQLQueryInterface<MovieGenreModel> {
         ResultSet resultSet = MySQLConnection.fetchData(sql);
 
         while (resultSet.next()) {
-            MovieGenreModel tmp = new MovieGenreModel();
-            tmp.DTO(resultSet);
-            result.add(tmp);
+            result.add(new MovieGenreModel(resultSet));
         }
 
         return result;
@@ -32,9 +32,7 @@ public class MovieGenreService implements MySQLQueryInterface<MovieGenreModel> {
         ResultSet resultSet = MySQLConnection.fetchData(sql);
 
         while (resultSet.next()) {
-            MovieGenreModel tmp = new MovieGenreModel();
-            tmp.DTO(resultSet);
-            result.add(tmp);
+            result.add(new MovieGenreModel(resultSet));
         }
 
         return result;
@@ -44,9 +42,9 @@ public class MovieGenreService implements MySQLQueryInterface<MovieGenreModel> {
     public MovieGenreModel getOne(String sql) throws SQLException {
         MovieGenreModel result = new MovieGenreModel();
         ResultSet resultSet = MySQLConnection.fetchData(sql);
-        if (resultSet.wasNull()) return null;
-        result = result.DTO(resultSet);
+        if (resultSet.next())
+            return new MovieGenreModel(resultSet);
 
-        return result;
+        return null;
     }
 }

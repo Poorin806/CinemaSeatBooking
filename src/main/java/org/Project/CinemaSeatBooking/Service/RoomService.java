@@ -2,6 +2,7 @@ package org.Project.CinemaSeatBooking.Service;
 
 import org.Project.CinemaSeatBooking.Model.GenreModel;
 import org.Project.CinemaSeatBooking.Model.RoomModel;
+import org.Project.CinemaSeatBooking.Model.TicketModel;
 import org.Project.CinemaSeatBooking.Utils.MySQLConnection;
 
 import java.sql.ResultSet;
@@ -33,7 +34,9 @@ public class RoomService implements MySQLQueryInterface<RoomModel> {
     @Override
     public RoomModel getOne(String sql) throws SQLException {
         ResultSet resultSet = MySQLConnection.fetchData(sql);
-        if (resultSet.wasNull()) return null;
-        return new RoomModel(resultSet);
+        if (resultSet.next())
+            return new RoomModel(resultSet);
+
+        return null;
     }
 }

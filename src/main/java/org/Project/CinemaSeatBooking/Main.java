@@ -13,8 +13,6 @@ public class Main {
 
         HomeGUI.show();
 
-//        MySQLConnection.closeConnection();
-
     }
 
 }

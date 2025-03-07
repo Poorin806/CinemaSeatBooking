@@ -4,6 +4,7 @@ import org.Project.CinemaSeatBooking.Model.MovieModel;
 import org.Project.CinemaSeatBooking.Model.MovieScheduleModel;
 import org.Project.CinemaSeatBooking.Model.TicketModel;
 import org.Project.CinemaSeatBooking.Service.MovieScheduleService;
+import org.Project.CinemaSeatBooking.Service.TicketService;
 import org.Project.CinemaSeatBooking.Utils.BackgroundImageJPanel;
 import org.Project.CinemaSeatBooking.Utils.EssentialsUtils;
 import org.Project.CinemaSeatBooking.Utils.UserTicket;
@@ -23,8 +24,9 @@ public class TicketCardGUI {
     private static final JScrollPane scrollPane = new JScrollPane();
 
     private static List<TicketModel> ticketModelList = new ArrayList<>();
-
     private static List<MovieScheduleModel> movieScheduleModelList = new ArrayList<>();
+
+    private static final TicketService ticketService = new TicketService();
 
     public static JPanel get() {
 
@@ -120,6 +122,14 @@ public class TicketCardGUI {
             }
         });
 
+        cancelBtn.addActionListener(e -> {
+            try {
+                cancelTicket(ticketModel);
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+
         buttonPanel.add(changeBtn);
         buttonPanel.add(Box.createHorizontalStrut(15));
         buttonPanel.add(cancelBtn);
@@ -178,6 +188,40 @@ public class TicketCardGUI {
 
         content.revalidate();
         content.repaint();
+    }
+
+    private static void cancelTicket(TicketModel ticketModel) throws SQLException {
+
+        int cancelOption = JOptionPane.showConfirmDialog(
+                HomeGUI.getRootFrame(),
+                "Are you sure you want to cancel this booking",
+                "Cinema Seat Booking",
+                JOptionPane.YES_NO_OPTION
+        );
+
+        if (cancelOption == JOptionPane.YES_OPTION) {
+
+            if (ticketService.cancelTicket(ticketModel.getTicketId())) {
+                JOptionPane.showMessageDialog(
+                        HomeGUI.getRootFrame(),
+                        "Canceled",
+                        "Cinema Seat Booking",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+
+                UserTicket.deleteTicketData(ticketModel);
+                refreshData();
+            } else {
+                JOptionPane.showMessageDialog(
+                        HomeGUI.getRootFrame(),
+                        "Something went wrong, please read the log",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
+            }
+
+        }
+
     }
 
     private static void selectBookingDetail(TicketModel ticketModel, MovieModel movieData) throws SQLException {

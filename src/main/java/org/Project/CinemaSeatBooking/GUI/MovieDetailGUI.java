@@ -102,8 +102,8 @@ public class MovieDetailGUI {
         }
 
         buttonPanel.add(bookingBtn);
-        buttonPanel.add(Box.createHorizontalStrut(10));
-        buttonPanel.add(favBtn);
+//        buttonPanel.add(Box.createHorizontalStrut(10));
+//        buttonPanel.add(favBtn);
         // Button Events listeners
         bookingBtn.addActionListener(e -> {
             selectBookingDetail(movieData);
@@ -112,26 +112,18 @@ public class MovieDetailGUI {
         releaseDateLabel.setForeground(Color.WHITE);
         showTimeLabel.setForeground(Color.WHITE);
         releaseDateLabel.setFont(new Font("Arial", Font.ITALIC, 16));
-        showTimeLabel.setFont(new Font("Arial", Font.ITALIC, 16));
 
-        JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));  // ใช้ FlowLayout และจัดตำแหน่งให้ชิดซ้าย
+        JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         footerPanel.setOpaque(false);
-        footerPanel.setPreferredSize(new Dimension(500, 20));  // กำหนดขนาดที่ต้องการ
-        footerPanel.setMaximumSize(new Dimension(500, 20));  // ขนาดสูงสุดที่ต้องการ
-        JPanel footerPanel_2 = new JPanel(new FlowLayout(FlowLayout.LEFT));  // ใช้ FlowLayout และจัดตำแหน่งให้ชิดซ้าย
-        footerPanel_2.setOpaque(false);
-        footerPanel_2.setPreferredSize(new Dimension(500, 20));  // กำหนดขนาดที่ต้องการ
-        footerPanel_2.setMaximumSize(new Dimension(500, 20));  // ขนาดสูงสุดที่ต้องการ
+        footerPanel.setPreferredSize(new Dimension(500, 40));
+        footerPanel.setMaximumSize(new Dimension(500, 40));
         releaseDateLabel.setForeground(Color.WHITE);
         showTimeLabel.setForeground(Color.WHITE);
         footerPanel.add(releaseDateLabel);
-        footerPanel_2.add(showTimeLabel);
 
         managementPanel.add(buttonPanel);
         managementPanel.add(Box.createVerticalStrut(20));
         managementPanel.add(footerPanel);
-        managementPanel.add(Box.createVerticalStrut(10));
-        managementPanel.add(footerPanel_2);
 
         detailGrid.add(descriptionPanel, BorderLayout.NORTH);
         detailGrid.add(managementPanel, BorderLayout.SOUTH);
