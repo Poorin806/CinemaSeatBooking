@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.Project.CinemaSeatBooking.Model.DashboardVIPModel;
-import org.Project.CinemaSeatBooking.Model.DashboardVIPModel;
 import org.Project.CinemaSeatBooking.Utils.MySQLConnection;
 
 public class DashboardVIPService implements MySQLQueryInterface<DashboardVIPModel>{

@@ -15,7 +15,7 @@ import java.util.List;
 public class DashboardGUI {
 
     private static final JPanel homeContent = new JPanel(new BorderLayout());
-
+    //EZ
     public static JPanel get() throws SQLException {
 
         homeContent.setPreferredSize(new Dimension(824, 768));
