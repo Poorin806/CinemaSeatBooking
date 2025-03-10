@@ -1,6 +1,5 @@
 package org.Project.CinemaSeatBooking.Service;
 
-import org.Project.CinemaSeatBooking.Model.MovieScheduleModel;
 import org.Project.CinemaSeatBooking.Model.TicketModel;
 import org.Project.CinemaSeatBooking.Utils.MySQLConnection;
 
@@ -30,7 +29,14 @@ public class TicketService implements MySQLQueryInterface<TicketModel> {
     @Override
     public TicketModel getOne(String sql) throws SQLException {
         ResultSet resultSet = MySQLConnection.fetchData(sql);
-        if (resultSet.wasNull()) return null;
-        return new TicketModel(resultSet);
+        if (resultSet.next())
+            return new TicketModel(resultSet);
+
+        return null;
+    }
+
+    public Boolean cancelTicket(String ticketId) throws SQLException {
+        String sql = "UPDATE ticket t SET t.is_active = false WHERE t.ticket_id = '" + ticketId + "'";
+        return MySQLConnection.query(sql) >= 1;
     }
 }

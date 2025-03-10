@@ -16,12 +16,11 @@ public class MovieGenreModel {
     private String movieId;
     private Integer genreId;
 
-    public MovieGenreModel DTO(ResultSet resultSet) throws SQLException {
-        MovieGenreModel result = new MovieGenreModel();
-        result.setMovieId(resultSet.getString("movie_id"));
-        result.setGenreId(resultSet.getInt("genre_id"));
-        return result;
+    public MovieGenreModel() {}
 
+    public MovieGenreModel (ResultSet resultSet) throws SQLException {
+        this.movieId = resultSet.getString("movie_id");
+        this.genreId = resultSet.getInt("genre_id");
     }
 
 }

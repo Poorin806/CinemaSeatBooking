@@ -64,10 +64,6 @@ public class SeatBookingGUI {
         int rows = 0;
         int index = 0;
 
-//        if (seatModelArrayList.size() == 0) {
-//            System.out.println("Seat data empty");
-//        }
-
         JPanel cartPanel = new JPanel();
         cartPanel.setOpaque(false);
         cartPanel.setLayout(new BoxLayout(cartPanel, BoxLayout.X_AXIS));
@@ -190,7 +186,7 @@ public class SeatBookingGUI {
 
     private static void setSeatData() throws SQLException {
 
-        String sql = "SELECT * FROM ticket t WHERE t.movie_schedule_id = '" + movieScheduleData.getScheduleId() + "'";
+        String sql = "SELECT * FROM ticket t WHERE t.movie_schedule_id = '" + movieScheduleData.getScheduleId() + "' AND t.is_active = true";
         List<TicketModel> ticketModelList = new TicketService().getMany(sql);
 
         List<Integer> bookedSeat = ticketModelList.stream()

@@ -1,6 +1,7 @@
 package org.Project.CinemaSeatBooking.Service;
 
 import org.Project.CinemaSeatBooking.Model.SeatTypeModel;
+import org.Project.CinemaSeatBooking.Model.TicketModel;
 import org.Project.CinemaSeatBooking.Utils.MySQLConnection;
 
 import java.sql.ResultSet;
@@ -33,7 +34,9 @@ public class SeatTypeService implements MySQLQueryInterface<SeatTypeModel> {
     @Override
     public SeatTypeModel getOne(String sql) throws SQLException {
         ResultSet resultSet = MySQLConnection.fetchData(sql);
-        if (resultSet.wasNull()) return null;
-        return new SeatTypeModel(resultSet);
+        if (resultSet.next())
+            return new SeatTypeModel(resultSet);
+
+        return null;
     }
 }

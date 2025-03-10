@@ -6,7 +6,6 @@ import org.Project.CinemaSeatBooking.Service.GenreService;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.List;
 
 @Data

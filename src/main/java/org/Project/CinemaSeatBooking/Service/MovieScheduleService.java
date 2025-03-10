@@ -2,6 +2,7 @@ package org.Project.CinemaSeatBooking.Service;
 
 import org.Project.CinemaSeatBooking.Model.MovieModel;
 import org.Project.CinemaSeatBooking.Model.MovieScheduleModel;
+import org.Project.CinemaSeatBooking.Model.TicketModel;
 import org.Project.CinemaSeatBooking.Utils.MySQLConnection;
 
 import java.sql.ResultSet;
@@ -32,7 +33,9 @@ public class MovieScheduleService implements MySQLQueryInterface<MovieScheduleMo
     @Override
     public MovieScheduleModel getOne(String sql) throws SQLException {
         ResultSet resultSet = MySQLConnection.fetchData(sql);
-        if (resultSet.wasNull()) return null;
-        return new MovieScheduleModel(resultSet);
+        if (resultSet.next())
+            return new MovieScheduleModel(resultSet);
+
+        return null;
     }
 }
