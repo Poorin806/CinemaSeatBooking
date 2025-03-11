@@ -103,7 +103,7 @@ public class TheaterManagementGUI {
     
 
     // อัปเดตหมายเลขของโรงภาพยนตร์
-    private static void updateTheaterList() throws SQLException {
+    public static void updateTheaterList() throws SQLException {
         List<RoomModel> roomList = new RoomService().getAll();
         theaterNumbers.clear();
 
