@@ -12,12 +12,100 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class DashboardGUI {
 
     private static final JPanel homeContent = new JPanel(new BorderLayout());
-    //EZ
-    public static JPanel get() throws SQLException {
 
+    // EZ
+    public static JPanel get() throws SQLException {
+        homeContent.setVisible(true);
+        return homeContent;
+    }
+
+    public static void show() {
+        homeContent.setVisible(true);
+    }
+
+    public static void close() {
+        homeContent.setVisible(false);
+    }
+
+    private static List<DashbordModel> getTopMovies() {
+        List<DashbordModel> dashboardData = new ArrayList<>();
+        try {
+            dashboardData = new DashbordService().getMany("SELECT " +
+                    "    m.movie_title, " +
+                    "    m.image_url, " +
+                    "    COUNT(t.ticket_id) AS total_tickets_sold, " +
+                    "    SUM(CASE WHEN st.seat_type_name = 'VIP' THEN 300 ELSE t.total_price END) AS total_sales, " +
+                    "    ROUND((COUNT(t.ticket_id) / total_tickets.total_tickets * 100), 2) AS percentage_tickets_sold, "
+                    +
+                    "    SUM(CASE WHEN st.seat_type_name = 'VIP' THEN 1 ELSE 0 END) AS total_vip_tickets_sold, " +
+                    "    SUM(CASE WHEN st.seat_type_name = 'VIP' THEN 300 ELSE 0 END) AS total_vip_sales " +
+                    "FROM ticket t " +
+                    "JOIN movie_schedule ms ON t.movie_schedule_id = ms.movie_schedule_id " +
+                    "JOIN movie m ON ms.movie_id = m.movie_id " +
+                    "JOIN seat s ON t.seat_id = s.seat_id " +
+                    "JOIN seat_type st ON s.seat_type_id = st.seat_type_id " +
+                    "JOIN (SELECT COUNT(ticket_id) AS total_tickets FROM ticket WHERE is_active = TRUE) total_tickets ON 1=1 "
+                    +
+                    "WHERE t.is_active = TRUE " +
+                    "GROUP BY m.movie_title, m.image_url " +
+                    "ORDER BY total_sales DESC " +
+                    "LIMIT 4;");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error fetching top movies: " + e.getMessage());
+        }
+        return dashboardData;
+    }
+
+    private static List<DashbordModel> getMonthlyIncome() {
+        List<DashbordModel> dashboardData = new ArrayList<>();
+        try {
+            dashboardData = new DashbordService().getMany("SELECT " +
+                    "    DATE_FORMAT(ms.show_time, '%Y') AS Year, " +
+                    "    COUNT(t.ticket_id) AS total_tickets_solds, " +
+                    "    SUM(t.total_price) AS total_saless " +
+                    "FROM ticket t " +
+                    "JOIN movie_schedule ms ON t.movie_schedule_id = ms.movie_schedule_id " +
+                    "WHERE t.is_active = TRUE " +
+                    "GROUP BY Year " +
+                    "ORDER BY Year;");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("SQL Error: " + e.getMessage());
+        }
+        return dashboardData;
+    }
+
+    private static List<DashboardVIPModel> getTopMoviesVIP() {
+        List<DashboardVIPModel> dashboardData = new ArrayList<>();
+        try {
+            dashboardData = new DashboardVIPService().getMany("SELECT " +
+                    "    m.movie_title AS vip_title, " +
+                    "    SUM(CASE WHEN st.seat_type_name = 'VIP' THEN 1 ELSE 0 END) AS vip_tickets_sold, " +
+                    "    SUM(CASE WHEN st.seat_type_name != 'VIP' THEN 1 ELSE 0 END) AS regular_tickets_sold " +
+                    "FROM ticket t " +
+                    "JOIN seat s ON t.seat_id = s.seat_id " +
+                    "JOIN seat_type st ON s.seat_type_id = st.seat_type_id " +
+                    "JOIN movie_schedule ms ON t.movie_schedule_id = ms.movie_schedule_id " +
+                    "JOIN movie m ON ms.movie_id = m.movie_id " +
+                    "WHERE t.is_active = TRUE " +
+                    "GROUP BY m.movie_title " +
+                    "ORDER BY vip_tickets_sold DESC " +
+                    "LIMIT 1;");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error fetching top VIP movie data: " + e.getMessage());
+        }
+        return dashboardData;
+    }
+
+    public static void resetScreen() throws SQLException {
+
+        homeContent.removeAll();
         homeContent.setPreferredSize(new Dimension(824, 768));
         homeContent.setBackground(new Color(73, 73, 73));
         homeContent.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
@@ -40,7 +128,6 @@ public class DashboardGUI {
         topMovieListTitle.setForeground(Color.WHITE);
         topMovieListTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
         topMovieList.add(topMovieListTitle, BorderLayout.NORTH);
-        
 
         JPanel topMovieItems = new JPanel(new GridLayout(1, 4, 10, 20));
         topMovieItems.setBackground(new Color(73, 73, 73));
@@ -58,7 +145,7 @@ public class DashboardGUI {
         JPanel incomeItem = new JPanel(new GridLayout(1, 3, 10, 10));
         incomeItem.setBackground(new Color(73, 73, 73));
         incomeItem.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
+        
         List<DashbordModel> dashboardData = getTopMovies();
 
         for (DashbordModel model : dashboardData) {
@@ -171,7 +258,8 @@ public class DashboardGUI {
             vipSeatSold.setFont(new Font("Arial", Font.PLAIN, 14));
             vipSeatDetails.add(vipSeatSold);
 
-            JLabel vipRegularSeatSold = new JLabel("Regular Seat Sold : " + model.getVipRegularTicketsSold(), SwingConstants.CENTER);
+            JLabel vipRegularSeatSold = new JLabel("Regular Seat Sold : " + model.getVipRegularTicketsSold(),
+                    SwingConstants.CENTER);
             vipRegularSeatSold.setForeground(Color.WHITE);
             vipRegularSeatSold.setFont(new Font("Arial", Font.PLAIN, 14));
             vipSeatDetails.add(vipRegularSeatSold);
@@ -187,88 +275,10 @@ public class DashboardGUI {
         mainPanel.add(imcomeList);
 
         homeContent.add(mainPanel, BorderLayout.CENTER);
-        homeContent.setVisible(false);
 
-        return homeContent;
+        homeContent.revalidate();
+        homeContent.repaint();
     }
 
-    public static void show() {
-        homeContent.setVisible(true);
-    }
 
-    public static void close() {
-        homeContent.setVisible(false);
-    }
-
-    private static List<DashbordModel> getTopMovies() {
-        List<DashbordModel> dashboardData = new ArrayList<>();
-        try {
-            dashboardData = new DashbordService().getMany("SELECT " +
-                    "    m.movie_title, " +
-                    "    m.image_url, " +
-                    "    COUNT(t.ticket_id) AS total_tickets_sold, " +
-                    "    SUM(CASE WHEN st.seat_type_name = 'VIP' THEN 300 ELSE t.total_price END) AS total_sales, " +
-                    "    ROUND((COUNT(t.ticket_id) / total_tickets.total_tickets * 100), 2) AS percentage_tickets_sold, "
-                    +
-                    "    SUM(CASE WHEN st.seat_type_name = 'VIP' THEN 1 ELSE 0 END) AS total_vip_tickets_sold, " +
-                    "    SUM(CASE WHEN st.seat_type_name = 'VIP' THEN 300 ELSE 0 END) AS total_vip_sales " +
-                    "FROM ticket t " +
-                    "JOIN movie_schedule ms ON t.movie_schedule_id = ms.movie_schedule_id " +
-                    "JOIN movie m ON ms.movie_id = m.movie_id " +
-                    "JOIN seat s ON t.seat_id = s.seat_id " +
-                    "JOIN seat_type st ON s.seat_type_id = st.seat_type_id " +
-                    "JOIN (SELECT COUNT(ticket_id) AS total_tickets FROM ticket WHERE is_active = TRUE) total_tickets ON 1=1 "
-                    +
-                    "WHERE t.is_active = TRUE " +
-                    "GROUP BY m.movie_title, m.image_url " +
-                    "ORDER BY total_sales DESC " +
-                    "LIMIT 4;");
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("Error fetching top movies: " + e.getMessage());
-        }
-        return dashboardData;
-    }
-
-    private static List<DashbordModel> getMonthlyIncome() {
-        List<DashbordModel> dashboardData = new ArrayList<>();
-        try {
-            dashboardData = new DashbordService().getMany("SELECT " +
-                    "    DATE_FORMAT(ms.show_time, '%Y') AS Year, " +
-                    "    COUNT(t.ticket_id) AS total_tickets_solds, " +
-                    "    SUM(t.total_price) AS total_saless " +
-                    "FROM ticket t " +
-                    "JOIN movie_schedule ms ON t.movie_schedule_id = ms.movie_schedule_id " +
-                    "WHERE t.is_active = TRUE " +
-                    "GROUP BY Year " +
-                    "ORDER BY Year;");
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("SQL Error: " + e.getMessage());
-        }
-        return dashboardData;
-    }
-
-    private static List<DashboardVIPModel> getTopMoviesVIP() {
-        List<DashboardVIPModel> dashboardData = new ArrayList<>();
-        try {
-            dashboardData = new DashboardVIPService().getMany("SELECT " +
-                    "    m.movie_title AS vip_title, " +
-                    "    SUM(CASE WHEN st.seat_type_name = 'VIP' THEN 1 ELSE 0 END) AS vip_tickets_sold, " +
-                    "    SUM(CASE WHEN st.seat_type_name != 'VIP' THEN 1 ELSE 0 END) AS regular_tickets_sold " +
-                    "FROM ticket t " +
-                    "JOIN seat s ON t.seat_id = s.seat_id " +
-                    "JOIN seat_type st ON s.seat_type_id = st.seat_type_id " +
-                    "JOIN movie_schedule ms ON t.movie_schedule_id = ms.movie_schedule_id " +
-                    "JOIN movie m ON ms.movie_id = m.movie_id " +
-                    "WHERE t.is_active = TRUE " +
-                    "GROUP BY m.movie_title " +
-                    "ORDER BY vip_tickets_sold DESC " +
-                    "LIMIT 1;");
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("Error fetching top VIP movie data: " + e.getMessage());
-        }
-        return dashboardData;
-    }
 }
