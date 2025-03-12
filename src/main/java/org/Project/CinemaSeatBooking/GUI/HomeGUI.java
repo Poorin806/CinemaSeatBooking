@@ -40,8 +40,7 @@ public class HomeGUI {
 
         // App Icon
         Image appIcon = Toolkit.getDefaultToolkit().getImage(
-                HomeGUI.class.getClassLoader().getResource("AppIcon.png")
-        );
+                HomeGUI.class.getClassLoader().getResource("AppIcon.png"));
         frame.setIconImage(appIcon);
 
         // Container layout settings
@@ -130,13 +129,15 @@ public class HomeGUI {
         cardLayout.show(cards, "movieDetail");
     }
 
-    public static void changeToSeatBooking(MovieModel movieModel, MovieScheduleModel movieScheduleModel) throws SQLException {
+    public static void changeToSeatBooking(MovieModel movieModel, MovieScheduleModel movieScheduleModel)
+            throws SQLException {
         SeatBookingGUI.setMovieData(movieModel, movieScheduleModel);
         SeatBookingGUI.clearSeatSelections();
         cardLayout.show(cards, "seatBooking");
     }
 
-    public static void changeToChangingSeat(TicketModel ticketModel, MovieModel movieModel, MovieScheduleModel movieScheduleModel) throws SQLException {
+    public static void changeToChangingSeat(TicketModel ticketModel, MovieModel movieModel,
+            MovieScheduleModel movieScheduleModel) throws SQLException {
         ChangingSeatGUI.setMovieData(ticketModel, movieModel, movieScheduleModel);
         ChangingSeatGUI.clearSeatSelections();
         cardLayout.show(cards, "seatChanging");
@@ -155,12 +156,14 @@ public class HomeGUI {
             JPanel adminSideBar = AdminSideBarGUI.get(homeContent);
             container.add(adminSideBar, BorderLayout.WEST);
 
-            container.revalidate();
-            container.repaint();
         }
-
+        try {
+            DashboardGUI.resetScreen();
+        } catch (SQLException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         cardLayout.show(cards, "dashboard");
-
     }
 
     public static void changeToMovieManagement() {
