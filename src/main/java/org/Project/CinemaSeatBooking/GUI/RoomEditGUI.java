@@ -30,6 +30,12 @@ public class RoomEditGUI {
         String sql = "UPDATE room SET room_name = '" + updatedRoomName + "' WHERE room_id = " + roomModel.getRoomId();
         MySQLConnection.query(sql);
         JOptionPane.showMessageDialog(content, "Room name updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+        try {
+            TheaterManagementGUI.updateTheaterList();
+        } catch (SQLException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     public static void setData(String roomId) {
