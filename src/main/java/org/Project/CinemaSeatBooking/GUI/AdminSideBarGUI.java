@@ -23,6 +23,7 @@ public class AdminSideBarGUI {
         JButton dashboardBtn = new JButton("Dashboard");
         JButton movieManagementBtn = new JButton("Movie");
         JButton theaterManagementBtn = new JButton("Theater");
+        JButton ticketManagementBtn = new JButton("Ticket");
         JButton logoutBtn = new JButton("Logout");
 
         // Event listeners
@@ -32,7 +33,7 @@ public class AdminSideBarGUI {
         });
 
         // บังคับขนาดปุ่มให้เท่ากัน
-        for (JButton btn : new JButton[]{movieManagementBtn, theaterManagementBtn, logoutBtn, dashboardBtn}) {
+        for (JButton btn : new JButton[]{movieManagementBtn, theaterManagementBtn, logoutBtn, dashboardBtn, ticketManagementBtn}) {
             btn.setAlignmentX(Component.CENTER_ALIGNMENT);
             btn.setMinimumSize(buttonSize);
             btn.setPreferredSize(buttonSize);
@@ -55,12 +56,18 @@ public class AdminSideBarGUI {
             HomeGUI.changeToTheaterManagement();
         });
 
+        ticketManagementBtn.addActionListener(e -> {
+            HomeGUI.changeToTicketManagement();
+        });
+
         sideBarButtonPanel.add(Box.createVerticalGlue());
         sideBarButtonPanel.add(dashboardBtn);
         sideBarButtonPanel.add(Box.createVerticalStrut(15));
         sideBarButtonPanel.add(movieManagementBtn);
         sideBarButtonPanel.add(Box.createVerticalStrut(15));
         sideBarButtonPanel.add(theaterManagementBtn);
+        sideBarButtonPanel.add(Box.createVerticalStrut(15));
+        sideBarButtonPanel.add(ticketManagementBtn);
         sideBarButtonPanel.add(Box.createVerticalStrut(15));
         sideBarButtonPanel.add(logoutBtn);
         sideBarButtonPanel.add(Box.createVerticalGlue());
