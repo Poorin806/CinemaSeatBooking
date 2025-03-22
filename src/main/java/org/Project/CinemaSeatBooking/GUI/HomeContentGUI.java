@@ -16,6 +16,7 @@ import java.util.List;
 public class HomeContentGUI {
 
     private static final JPanel homeContent = new JPanel(new BorderLayout());
+    private static List<MovieModel> movieModelList;
 
     public static JPanel get() throws SQLException {
 
@@ -39,7 +40,7 @@ public class HomeContentGUI {
         movieItems.setBackground(new Color(73, 73, 73));
 
         // [Get data from database]
-        List<MovieModel> movieModelList = new MovieService().getAll();
+        movieModelList = new MovieService().getAll();
 
         // Movie card Looping
         int counting = 1;

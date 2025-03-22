@@ -71,6 +71,7 @@ public class HomeGUI {
         cards.add(TheaterManagementGUI.get(), "theaterManagement");
         cards.add(ChangingSeatGUI.get(), "seatChanging");
         cards.add(RoomEditGUI.get(), "editRoom");
+        cards.add(TicketManagementGUI.get(), "ticketManagement");
         container.add(cards, BorderLayout.CENTER);
         cardLayout.show(cards, "homeContent");
 
@@ -167,7 +168,17 @@ public class HomeGUI {
     }
 
     public static void changeToMovieManagement() {
+        try {
+            MovieManagementGUI.refreshData();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
         cardLayout.show(cards, "movieManagement");
+    }
+
+    public static void changeToTicketManagement() {
+        TicketManagementGUI.refreshData();
+        cardLayout.show(cards, "ticketManagement");
     }
 
     public static void changeToTheaterManagement() {

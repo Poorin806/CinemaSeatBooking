@@ -1,38 +1,20 @@
 package org.Project.CinemaSeatBooking.GUI;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.*;
+import java.awt.event.*;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
+import java.util.*;
 import java.util.List;
-import java.util.Locale;
+import java.util.stream.Collectors;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.ScrollPaneConstants;
+import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 
-import org.Project.CinemaSeatBooking.Model.MovieModel;
-import org.Project.CinemaSeatBooking.Service.MovieService;
+import org.Project.CinemaSeatBooking.Model.*;
+import org.Project.CinemaSeatBooking.Service.*;
 import org.Project.CinemaSeatBooking.Utils.BackgroundImageJPanel;
 import org.Project.CinemaSeatBooking.Utils.EssentialsUtils;
 import org.Project.CinemaSeatBooking.Utils.MySQLConnection;
@@ -43,7 +25,7 @@ public class MovieManagementGUI {
     private static JPanel currentContent = new JPanel(new BorderLayout()); // To manage card list or detail
 
     public static JPanel get() throws SQLException {
-        currentContent = getCardList();
+//        currentContent = refreshData();
         content.removeAll();
         content.add(currentContent, BorderLayout.CENTER);
         content.revalidate();
@@ -51,7 +33,7 @@ public class MovieManagementGUI {
         return content;
     }
 
-    private static JPanel getCardList() throws SQLException {
+    public static void refreshData() throws SQLException {
         currentContent.removeAll();
         currentContent.setLayout(new BorderLayout());
         currentContent.setPreferredSize(new Dimension(824, 768));
@@ -60,11 +42,25 @@ public class MovieManagementGUI {
 
         // Title
         JPanel titlePanel = new JPanel(new BorderLayout());
+
+        JButton addNewMovieBtn = new JButton("Add new");
+        addNewMovieBtn.setBorderPainted(false);
+        addNewMovieBtn.setFocusPainted(false);
+        addNewMovieBtn.setBackground(Color.DARK_GRAY);
+        addNewMovieBtn.setForeground(Color.WHITE);
+        addNewMovieBtn.setFont(new Font("Arial", Font.BOLD, 14));
+        addNewMovieBtn.setPreferredSize(new Dimension(150, 30));
+        addNewMovieBtn.setMaximumSize(new Dimension(150, 30));
+        addNewMovieBtn.addActionListener(e -> {
+            addNewMovieData();
+        });
+
         JLabel movieListTitle = new JLabel("Movie Management");
         movieListTitle.setFont(new Font("Arial", Font.BOLD, 24));
         movieListTitle.setHorizontalAlignment(JLabel.LEFT);
         movieListTitle.setForeground(Color.WHITE);
         titlePanel.add(movieListTitle, BorderLayout.WEST);
+        titlePanel.add(addNewMovieBtn, BorderLayout.EAST);
         titlePanel.setOpaque(false);
         currentContent.add(titlePanel, BorderLayout.NORTH);
 
@@ -128,7 +124,8 @@ public class MovieManagementGUI {
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
         currentContent.add(scrollPane, BorderLayout.CENTER);
-        return currentContent;
+
+//        return currentContent;
     }
 
     private static JPanel getDetail(MovieModel movie) throws SQLException {
@@ -137,18 +134,97 @@ public class MovieManagementGUI {
         detailContent.setBackground(new Color(73, 73, 73));
 
         // Header Panel
-        JPanel header = new JPanel();
+        JPanel header = new JPanel(new BorderLayout());
         header.setPreferredSize(new Dimension(content.getWidth(), 60));
         header.setBorder(new EmptyBorder(20, 20, 20, 20));
         header.setBackground(new Color(73, 73, 73));
 
-        JLabel backButton = new JLabel("< Back");
-        backButton.setForeground(Color.WHITE);
-        backButton.setFont(new Font("Arial", Font.BOLD, 20));
-        backButton.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent evt) {
+        JButton backBtn = new JButton("Back");
+        JButton deleteBtn = new JButton("Delete");
+        backBtn.addActionListener(e -> {
+            try {
+                refreshData();
+                content.removeAll();
+                content.add(currentContent, BorderLayout.CENTER);
+                content.revalidate();
+                content.repaint();
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+        deleteBtn.addActionListener(e -> {
+            int deleteConfirmation = JOptionPane.showConfirmDialog(
+                    HomeGUI.getRootFrame(),
+                    "If delete confirmed, all data about movie & ticket will be permanent deleted",
+                    "Cinema Seat Booking",
+                    JOptionPane.YES_NO_OPTION
+            );
+
+            if (deleteConfirmation == JOptionPane.YES_OPTION) {
+
+                String confirmDeleteInput = JOptionPane.showInputDialog(
+                        HomeGUI.getRootFrame(),
+                        "To delete, please type '" + movie.getTitle() + "'",
+                        "Cinema Seat Booking",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+
+                if (!movie.getTitle().equals(confirmDeleteInput)) {
+                    JOptionPane.showMessageDialog(
+                            HomeGUI.getRootFrame(),
+                            "Failed to delete (invalid input), please try again",
+                            "Cinema Seat Booking",
+                            JOptionPane.ERROR_MESSAGE
+                    );
+                    return;
+                }
+
+                // Delete Query SQL
+                List<String> deleteMovieScheduleId = new ArrayList<>();
+                List<String> deleteTicketId = new ArrayList<>();
+
                 try {
-                    currentContent = getCardList();
+                    // Get movie schedules to delete
+                    List<MovieScheduleModel> deletedMovieScheduleList =
+                            new MovieScheduleService().getMany("SELECT * FROM movie_schedule WHERE movie_id = '" + movie.getMovieId() + "'");
+                    for (MovieScheduleModel movieScheduleModel : deletedMovieScheduleList) {
+                        deleteMovieScheduleId.add(movieScheduleModel.getScheduleId());
+                    }
+
+                    if (!deleteMovieScheduleId.isEmpty()) {
+                        // Get tickets related to those schedules
+                        String scheduleIdString = deleteMovieScheduleId.stream()
+                                .map(id -> "'" + id + "'") // Wrap IDs in single quotes
+                                .collect(Collectors.joining(","));
+
+                        List<TicketModel> deletedTicketList =
+                                new TicketService().getMany("SELECT * FROM ticket WHERE movie_schedule_id IN (" + scheduleIdString + ")");
+                        for (TicketModel ticketModel : deletedTicketList) {
+                            deleteTicketId.add(ticketModel.getTicketId());
+                        }
+
+                        if (!deleteTicketId.isEmpty()) {
+                            String ticketIdString = deleteTicketId.stream()
+                                    .map(id -> "'" + id + "'")
+                                    .collect(Collectors.joining(","));
+                            MySQLConnection.query("DELETE FROM ticket_log WHERE ticket_id IN (" + ticketIdString + ")");
+                            MySQLConnection.query("DELETE FROM ticket WHERE movie_schedule_id IN (" + scheduleIdString + ")");
+                        }
+
+                        MySQLConnection.query("DELETE FROM movie_schedule WHERE movie_id = '" + movie.getMovieId() + "'");
+                    }
+
+                    // Fix table name from 'move_genre' to 'movie_genre'
+                    MySQLConnection.query("DELETE FROM movie_genre WHERE movie_id = '" + movie.getMovieId() + "'");
+                    MySQLConnection.query("DELETE FROM movie WHERE movie_id = '" + movie.getMovieId() + "'");
+
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+
+                JOptionPane.showMessageDialog(HomeGUI.getRootFrame(), "Delete completed", "Cinema Seat Booking", JOptionPane.INFORMATION_MESSAGE);
+                try {
+                    refreshData();
                     content.removeAll();
                     content.add(currentContent, BorderLayout.CENTER);
                     content.revalidate();
@@ -158,7 +234,16 @@ public class MovieManagementGUI {
                 }
             }
         });
-        header.add(backButton);
+        for (JButton btn : new JButton[] { backBtn, deleteBtn }) {
+            btn.setForeground(Color.WHITE);
+            btn.setBackground(new Color(103, 103, 103));
+            btn.setFont(new Font("Arial", Font.PLAIN, 20));
+            btn.setFocusPainted(false);
+            btn.setBorderPainted(false);
+        }
+        deleteBtn.setBackground(Color.RED);
+        header.add(backBtn, BorderLayout.WEST);
+        header.add(deleteBtn, BorderLayout.EAST);
 
         detailContent.add(header, BorderLayout.NORTH);
 
@@ -321,7 +406,14 @@ public class MovieManagementGUI {
                 }
             }
         });
-        
+
+        for (JButton btn : new JButton[] { datePickerButton, isActivateBtn, saveButton }) {
+            btn.setBackground(new Color(103, 103, 103));
+            btn.setForeground(Color.WHITE);
+            btn.setFocusPainted(false);
+            btn.setBorderPainted(false);
+        }
+
         mainContent.add(Box.createVerticalStrut(20));
         mainContent.add(saveButton);
 
@@ -409,4 +501,274 @@ public class MovieManagementGUI {
     public interface DateSelectionListener {
         void onDateSelected(Date selectedDate);
     }
+
+    private static void addNewMovieData() {
+        JDialog modal = new JDialog(HomeGUI.getRootFrame(), "Add new movie", true);
+        modal.setSize(800, 600);
+        modal.setLayout(new BorderLayout());
+        modal.setLocationRelativeTo(HomeGUI.getRootFrame());
+
+        JPanel body = new JPanel(new GridBagLayout());
+        body.setBackground(new Color(73, 73, 73));
+        body.setBorder(new EmptyBorder(20, 20, 20, 20));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        // Labels and Fields
+        JLabel movieTitleLabel = new JLabel("Title:");
+        JTextField movieTitleField = new JTextField(20);
+
+        JLabel movieDescriptionLabel = new JLabel("Description:");
+        JTextArea movieDescriptionArea = new JTextArea(5, 20);
+        JScrollPane descriptionScrollPane = new JScrollPane(movieDescriptionArea);
+
+        JLabel releaseDateLabel = new JLabel("Release Date:");
+        JTextField releaseDateField = new JTextField(20);
+
+        JLabel movieImageUrlLabel = new JLabel("Image URL:");
+        JTextField movieImageUrlField = new JTextField(20);
+
+        JLabel movieGenresLabel = new JLabel("Genres:");
+
+        List<GenreModel> genreModelList;
+        try {
+            genreModelList = new GenreService().getAll();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        JPanel checkBoxPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        checkBoxPanel.setOpaque(false);
+        List<Integer> selectedGenreIdList = new ArrayList<>();
+        for (GenreModel genreModel : genreModelList) {
+            JCheckBox checkBox = new JCheckBox(genreModel.getName());
+            checkBox.setOpaque(false);
+            checkBox.setForeground(Color.WHITE);
+            checkBox.addItemListener(e -> {
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    selectedGenreIdList.add(genreModel.getGenreId());
+                } else {
+                    selectedGenreIdList.remove(genreModel.getGenreId());
+                }
+
+                System.out.println("Current selected : " + selectedGenreIdList.toString());
+            });
+
+            checkBoxPanel.add(checkBox);
+        }
+
+        // Movie Schedule
+        JLabel movieScheduleLabel = new JLabel("Movie Schedule:");
+
+        // Add new movie schedule
+        JPanel addNewScheduleInputPanel = new JPanel(new BorderLayout());
+        addNewScheduleInputPanel.setOpaque(false);
+        String dateTimePlaceholder = "yyyy-mm-dd hh:mm:ss";
+        JTextField dateTimeScheduleField = new JTextField(20);
+        dateTimeScheduleField.setForeground(Color.GRAY);
+        dateTimeScheduleField.setText(dateTimePlaceholder);
+        dateTimeScheduleField.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (dateTimeScheduleField.getText().equals(dateTimePlaceholder)) {
+                    dateTimeScheduleField.setText("");
+                    dateTimeScheduleField.setForeground(Color.BLACK);
+                }
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (dateTimeScheduleField.getText().isEmpty()) {
+                    dateTimeScheduleField.setText(dateTimePlaceholder);
+                    dateTimeScheduleField.setForeground(Color.GRAY);
+                }
+            }
+        });
+        List<RoomModel> roomModelList;
+        try {
+            roomModelList = new RoomService().getAll();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        String[] roomNameOptions = new String[roomModelList.size()];
+        for (int i = 0; i < roomModelList.size(); i++) {
+            roomNameOptions[i] = roomModelList.get(i).getName();
+        }
+
+        JComboBox<String> roomComboBox = new JComboBox<>(roomNameOptions);
+        roomComboBox.addActionListener(e -> {
+
+            System.out.println("You selected : " + roomComboBox.getSelectedItem());
+
+        });
+
+        addNewScheduleInputPanel.add(roomComboBox, BorderLayout.WEST);
+        addNewScheduleInputPanel.add(dateTimeScheduleField, BorderLayout.EAST);
+
+        // Style Labels
+        JLabel[] labels = {movieTitleLabel, movieDescriptionLabel, releaseDateLabel, movieGenresLabel, movieImageUrlLabel, movieScheduleLabel};
+        for (JLabel label : labels) {
+            label.setForeground(Color.WHITE);
+            label.setFont(new Font("Arial", Font.BOLD, 16));
+        }
+
+        // Row 1 - Title
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.LINE_END;
+        body.add(movieTitleLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 1;
+        body.add(movieTitleField, gbc);
+
+        // Row 2 - Description
+        gbc.gridx = 0;
+        gbc.gridy++;
+        gbc.weightx = 0;
+        body.add(movieDescriptionLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 1;
+        descriptionScrollPane.setPreferredSize(new Dimension(400, 100));
+        movieDescriptionArea.setLineWrap(true);
+        movieDescriptionArea.setWrapStyleWord(true);
+        body.add(descriptionScrollPane, gbc);
+
+        // Row 3 - Release Date
+        gbc.gridx = 0;
+        gbc.gridy++;
+        gbc.weightx = 0;
+        body.add(releaseDateLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 1;
+        body.add(releaseDateField, gbc);
+
+        // Row 4 - Genres
+        gbc.gridx = 0;
+        gbc.gridy++;
+        gbc.weightx = 0;
+        body.add(movieGenresLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 1;
+        body.add(checkBoxPanel, gbc);
+
+        // Row 5 - Image URL
+        gbc.gridy++;
+        gbc.gridx = 0;
+        gbc.weightx = 0;
+        body.add(movieImageUrlLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 1;
+        body.add(movieImageUrlField, gbc);
+
+        // Row 6 - Movie Schedule
+        gbc.gridy++;
+        gbc.gridx = 0;
+        gbc.weightx = 0;
+        body.add(movieScheduleLabel, gbc);
+
+        gbc.gridx = 1;
+        body.add(addNewScheduleInputPanel, gbc);
+
+        // Buttons Panel
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+        buttonPanel.setBackground(new Color(73, 73, 73)); // ให้สีตรงกับ body
+
+        JButton submitButton = new JButton("Submit");
+        JButton cancelButton = new JButton("Cancel");
+
+        buttonPanel.add(submitButton);
+        buttonPanel.add(cancelButton);
+
+        for (JButton btn : new JButton[] { submitButton, cancelButton }) {
+            btn.setFocusPainted(false);
+            btn.setBorderPainted(false);
+            btn.setForeground(Color.WHITE);
+            btn.setBackground(new Color(103, 103, 103));
+        }
+
+        cancelButton.addActionListener(e -> modal.dispose());
+
+        submitButton.addActionListener(e -> {
+            String title = movieTitleField.getText();
+            String description = movieDescriptionArea.getText();
+            String imageUrl = movieImageUrlField.getText();
+            String releaseDate = releaseDateField.getText();
+            String genres = selectedGenreIdList.toString();
+            String roomId = roomModelList.stream()
+                    .filter(room -> room.getName().equals(roomComboBox.getSelectedItem().toString()))
+                    .map(RoomModel::getRoomId)
+                    .findFirst()
+                    .orElse(null);
+
+            String movieSchedule = dateTimeScheduleField.getText();
+
+            String input = dateTimeScheduleField.getText();
+            if (
+                    !EssentialsUtils.isValidDateTime(input, false)||
+                    !EssentialsUtils.isValidDateTime(releaseDate, true)
+            ) {
+                JOptionPane.showMessageDialog(HomeGUI.getRootFrame(),
+                        "Invalid Date/Time format",
+                        "Input Error", JOptionPane.ERROR_MESSAGE);
+
+                return;
+            }
+
+            // Query in to database
+            // Movie query
+            String movieId_PK = MySQLConnection.genreratePK();
+            String movieSQL = "INSERT INTO movie " +
+                    "(movie_id, movie_title, movie_description, image_url, movie_time, movie_cost_percentage, release_date, is_active) " +
+                    "VALUES " +
+                    "('" + movieId_PK + "', '" + title + "', '" + description + "', '" + imageUrl + "', '" +
+                    2 + "', " + 15.00 + ", '" + releaseDate + "', " + 1 + ");";
+
+            if (MySQLConnection.query(movieSQL) > 0L) {
+                for (int i = 0; i < selectedGenreIdList.size(); i++) {
+                    String movieGenreSQL = "INSERT INTO movie_genre (movie_id, genre_id) VALUES ('" + movieId_PK + "', " + selectedGenreIdList.get(i) + ")";
+                    if (MySQLConnection.query(movieGenreSQL) <= 0L) {
+                        System.err.println("Something went wrong (Movie genre query)");
+                        return;
+                    }
+                }
+
+                String movieSchedule_PK = MySQLConnection.genreratePK();
+                String movieScheduleSQL = "INSERT INTO movie_schedule (movie_schedule_id, movie_id, room_id, show_time, end_time) VALUES ('" +
+                        movieSchedule_PK + "', '" + movieId_PK + "', '" + roomId + "', '" + movieSchedule + "', '" + EssentialsUtils.addHours(movieSchedule, 2) + "')";
+
+                if (MySQLConnection.query(movieScheduleSQL) > 0L) {
+                    JOptionPane.showMessageDialog(
+                            HomeGUI.getRootFrame(), "Add new movie success", "Cinema Seat Booking", JOptionPane.INFORMATION_MESSAGE
+                    );
+
+                    try {
+                        refreshData();
+                        content.removeAll();
+                        content.add(currentContent, BorderLayout.CENTER);
+                        content.revalidate();
+                        content.repaint();
+                    } catch (SQLException ex) {
+                        throw new RuntimeException(ex);
+                    }
+
+                    modal.dispose();
+                }
+            }
+
+        });
+
+        modal.add(body, BorderLayout.CENTER);
+        modal.add(buttonPanel, BorderLayout.SOUTH);
+
+        modal.setVisible(true);
+    }
+
+
 }   
