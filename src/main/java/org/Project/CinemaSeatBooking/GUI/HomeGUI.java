@@ -168,6 +168,11 @@ public class HomeGUI {
     }
 
     public static void changeToMovieManagement() {
+        try {
+            MovieManagementGUI.refreshData();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
         cardLayout.show(cards, "movieManagement");
     }
 
