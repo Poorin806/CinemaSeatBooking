@@ -1,18 +1,35 @@
 package org.Project.CinemaSeatBooking.GUI;
 
-import org.Project.CinemaSeatBooking.Model.*;
-import org.Project.CinemaSeatBooking.Service.SeatService;
-import org.Project.CinemaSeatBooking.Service.TicketService;
-import org.Project.CinemaSeatBooking.Utils.MySQLConnection;
-import org.Project.CinemaSeatBooking.Utils.UserTicket;
-
-import javax.swing.*;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridBagLayout;
 import java.awt.event.ItemEvent;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JToggleButton;
+import javax.swing.SwingConstants;
+
+import org.Project.CinemaSeatBooking.Model.MovieModel;
+import org.Project.CinemaSeatBooking.Model.MovieScheduleModel;
+import org.Project.CinemaSeatBooking.Model.SeatModel;
+import org.Project.CinemaSeatBooking.Model.TicketModel;
+import org.Project.CinemaSeatBooking.Service.SeatService;
+import org.Project.CinemaSeatBooking.Service.TicketService;
+import org.Project.CinemaSeatBooking.Utils.MySQLConnection;
+import org.Project.CinemaSeatBooking.Utils.UserTicket;
 
 public class SeatBookingGUI {
 
@@ -50,6 +67,13 @@ public class SeatBookingGUI {
         bannerPanel.setPreferredSize(new Dimension(824, 224));
         bannerPanel.setMaximumSize(new Dimension(824, 224));
         bannerPanel.setBackground(Color.LIGHT_GRAY);
+            // Add "Screen" label to the banner panel
+            JLabel screenLabel = new JLabel("SCREEN");
+            screenLabel.setFont(new Font("Arial", Font.BOLD, 24));
+            screenLabel.setForeground(Color.BLACK);
+            screenLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            bannerPanel.setLayout(new GridBagLayout());
+            bannerPanel.add(screenLabel);
 
         // Seat Panel
         seatPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5)); // ใช้ GridLayout
