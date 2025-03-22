@@ -8,6 +8,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -87,13 +88,13 @@ public class TheaterManagementGUI {
         MySQLConnection.query(sql); 
     }
 
-    private static void addTheaterBox(String theaterID, String TheatrName) throws SQLException {
+    private static void addTheaterBox(String theaterID, String theaterName) throws SQLException {
         JPanel theaterBox = new JPanel();
         theaterBox.setPreferredSize(new Dimension(150, 100));
         theaterBox.setBackground(new Color(100, 100, 100));
         theaterBox.setLayout(new BorderLayout());
 
-        JLabel label = new JLabel(TheatrName);
+        JLabel label = new JLabel(theaterName);
         label.setForeground(Color.WHITE);
         label.setFont(new Font("Arial", Font.PLAIN, 18));
 
@@ -102,10 +103,10 @@ public class TheaterManagementGUI {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         buttonPanel.setBackground(new Color(100, 100, 100));
 
-        JButton EditButton = new JButton("Edit");
-        EditButton.setFont(new Font("Arial", Font.PLAIN, 12));
-        EditButton.setBackground(new Color(0, 191, 255));
-        EditButton.setForeground(Color.WHITE);
+        JButton editButton = new JButton("Edit");
+        editButton.setFont(new Font("Arial", Font.PLAIN, 12));
+        editButton.setBackground(new Color(0, 191, 255));
+        editButton.setForeground(Color.WHITE);
 
         JButton deleteButton = new JButton("Delete");
         deleteButton.setFont(new Font("Arial", Font.PLAIN, 12));
@@ -124,9 +125,33 @@ public class TheaterManagementGUI {
 
                 if (confirm == JOptionPane.YES_OPTION) {
                     try {
-                        String sql = "DELETE FROM room WHERE room_id = '" + theaterID + "'";
-                        MySQLConnection.query(sql);
+                        
+                        String sqlCheck = "SELECT * FROM movie_schedule WHERE room_id = '" + theaterID + "'";
+                        ResultSet resultSet = MySQLConnection.fetchData(sqlCheck);
+                        
+                        if (resultSet.next()) { 
+                            JOptionPane.showMessageDialog(
+                                null,
+                                "Cannot delete! This theater is in using.",
+                                "Deletion Failed",
+                                JOptionPane.ERROR_MESSAGE
+                            );
+                            return;
+                        }
+
+                        
+                        String sqlDelete = "DELETE FROM room WHERE room_id = '" + theaterID + "'";
+                        MySQLConnection.query(sqlDelete);
+
+                        JOptionPane.showMessageDialog(
+                            null,
+                            "Theater deleted successfully.",
+                            "Success",
+                            JOptionPane.INFORMATION_MESSAGE
+                        );
+
                         updateTheaterList();
+
                     } catch (SQLException ex) {
                         JOptionPane.showMessageDialog(
                             null,
@@ -140,7 +165,7 @@ public class TheaterManagementGUI {
             }
         });
 
-        EditButton.addActionListener(new ActionListener() {
+        editButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -152,7 +177,7 @@ public class TheaterManagementGUI {
         });
 
         buttonPanel.add(deleteButton);
-        buttonPanel.add(EditButton);
+        buttonPanel.add(editButton);
         theaterBox.add(buttonPanel, BorderLayout.SOUTH);
         theaterPanel.add(theaterBox);
     }
